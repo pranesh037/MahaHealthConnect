@@ -217,10 +217,10 @@ export const Header = ({ toggleMobileSidebar }) => {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.8125rem' }}>
                 <div style={{ padding: '0.375rem', backgroundColor: '#EFF6FF', borderRadius: '4px' }}>
-                  <strong>{t('notificationReferralAccepted')}:</strong> District Hospital Aundh accepted REF-9901 for Ramesh Patil.
+                  <strong>{t('notificationReferralAccepted')}:</strong> {t('notificationReferralAcceptedDetail', { hospital: 'District Hospital Aundh', refId: 'REF-9901', name: 'Ramesh Patil' })}
                 </div>
                 <div style={{ padding: '0.375rem', backgroundColor: '#FEF3C7', borderRadius: '4px' }}>
-                  <strong>{t('notificationMedicineAlert')}:</strong> IFA Red tablets below minimum safety stock at PHC Mulshi.
+                  <strong>{t('notificationMedicineAlert')}:</strong> {t('notificationMedicineAlertDetail', { med: 'IFA Red', facility: 'PHC Mulshi' })}
                 </div>
               </div>
             </div>

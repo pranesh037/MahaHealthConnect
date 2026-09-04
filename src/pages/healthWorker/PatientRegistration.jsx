@@ -38,7 +38,7 @@ export const PatientRegistration = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { addPatient, generatePatientId, findDuplicatePatient } = usePatients();
-  const { t } = useLanguage();
+  const { t, translateGender } = useLanguage();
 
   // Facility defaults from logged-in user context
   const facilityName = user?.facility_name || 'PHC Mulshi';
@@ -373,7 +373,7 @@ export const PatientRegistration = () => {
                 {t('dob')} & {t('age')}
               </div>
               <div style={{ fontSize: '1rem', fontWeight: '700', color: '#334155', marginTop: '0.25rem' }}>
-                {registeredPatient.dob} ({registeredPatient.age} yrs, {registeredPatient.gender})
+                {registeredPatient.dob} ({registeredPatient.age} {t('yearsShort')}, {translateGender(registeredPatient.gender)})
               </div>
             </div>
 
@@ -455,7 +455,7 @@ export const PatientRegistration = () => {
                   <div>
                     <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0F2C59' }}>{registeredPatient.name}</h2>
                     <p style={{ fontSize: '0.875rem', color: '#64748B' }}>
-                      ID: <strong style={{ color: '#0F2C59', fontFamily: 'monospace' }}>{registeredPatient.patient_id}</strong> • {t('dob')}: {registeredPatient.dob} ({registeredPatient.age} yrs, {registeredPatient.gender})
+                      ID: <strong style={{ color: '#0F2C59', fontFamily: 'monospace' }}>{registeredPatient.patient_id}</strong> • {t('dob')}: {registeredPatient.dob} ({registeredPatient.age} {t('yearsShort')}, {translateGender(registeredPatient.gender)})
                     </p>
                   </div>
                   <StatusBadge status="AVAILABLE" customLabel="REGISTERED" />
@@ -590,7 +590,7 @@ export const PatientRegistration = () => {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                   <span style={{ fontWeight: '700', color: '#64748B' }}>{t('dob')} / {t('age')}:</span>
-                  <span>{duplicateWarning.dob || 'N/A'} ({duplicateWarning.age} yrs, {duplicateWarning.gender})</span>
+                  <span>{duplicateWarning.dob || 'N/A'} ({duplicateWarning.age} {t('yearsShort')}, {translateGender(duplicateWarning.gender)})</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ fontWeight: '700', color: '#64748B' }}>{t('facility')}:</span>
@@ -641,7 +641,7 @@ export const PatientRegistration = () => {
             <div style={{ padding: '1.5rem', maxHeight: '70vh', overflowY: 'auto' }}>
               <h3 style={{ fontSize: '1.125rem', fontWeight: '800', color: '#0F2C59', marginBottom: '0.25rem' }}>{viewingDuplicatePatient.name}</h3>
               <p style={{ fontSize: '0.875rem', color: '#64748B', marginBottom: '1rem' }}>
-                ID: <strong style={{ color: '#0F2C59', fontFamily: 'monospace' }}>{viewingDuplicatePatient.patient_id}</strong> • {viewingDuplicatePatient.age} yrs ({viewingDuplicatePatient.gender})
+                ID: <strong style={{ color: '#0F2C59', fontFamily: 'monospace' }}>{viewingDuplicatePatient.patient_id}</strong> • {viewingDuplicatePatient.age} {t('yearsShort')} ({translateGender(viewingDuplicatePatient.gender)})
               </p>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.875rem', marginBottom: '1rem' }}>

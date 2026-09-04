@@ -33,7 +33,7 @@ export const PatientSearch = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { patients } = usePatients();
-  const { t } = useLanguage();
+  const { t, translateGender } = useLanguage();
   const { logAccessEvent, getPatientAuditHistory } = useAudit();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -237,9 +237,9 @@ export const PatientSearch = () => {
                       </td>
                       <td>
                         <div style={{ fontWeight: '700', color: '#0F172A' }}>{patient.name}</div>
-                        <div style={{ fontSize: '0.75rem', color: '#64748B' }}>{patient.age} yrs</div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748B' }}>{patient.age} {t('yearsShort')}</div>
                       </td>
-                      <td>{patient.gender}</td>
+                      <td>{translateGender(patient.gender)}</td>
                       <td>{patient.phone}</td>
                       <td>
                         <div>{patient.village}</div>

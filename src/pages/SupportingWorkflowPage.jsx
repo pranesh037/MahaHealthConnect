@@ -14,10 +14,44 @@ const pageMeta = {
 const staff = [{ name: 'Sunita Laxman Shinde', role: 'Health Worker', status: 'PRESENT' }, { name: 'Dr. Aniket Deshmukh', role: 'Cardiologist', status: 'PRESENT' }, { name: 'Rajesh S. Pawar', role: 'Facility Admin', status: 'PRESENT' }, { name: 'Priyamvada Joshi', role: 'Obstetrics', status: 'ON LEAVE' }];
 function Panel({ title, icon, children }) { const { t } = useLanguage(); const titleKeys = { 'Basic Information': 'basicInformation', 'Emergency Contacts and Clinical Summary': 'clinicalSummary', 'ANC Registration': 'ancRegistration', 'Care Timeline': 'careTimeline', 'Demo NFC Scan': 'demoNfcScan', 'Record document': 'recordDocument', 'Document register': 'documentRegister', 'Staff attendance': 'staffAttendance', 'Operational signals': 'operationalSignals', 'Facility team': 'facilityTeam', 'Referral flow by facility': 'referralFlowByFacility', 'District stock register': 'districtMedicineStocks', 'Diagnostic capacity matrix': 'diagnosticCapacityMatrix', 'Quality review notes': 'qualityReviewNotes' }; return <section className="gov-card" style={{ marginBottom: '1rem' }}><div className="gov-card-header"><div className="gov-card-title">{icon}{t(titleKeys[title] || title)}</div></div>{children}</section>; }
 function Metric({ label, value, tone = '#1E40AF' }) { const { t } = useLanguage(); return <div className="stat-card"><div><div className="stat-value" style={{ color: tone }}>{value}</div><div className="stat-label">{t(label)}</div></div><BarChart3 style={{ color: tone }} /></div>; }
-function Table({ rows, columns }) { const { t } = useLanguage(); const columnLabels = { name: 'name', role: 'role', status: 'status', check_in: 'checkIn', patient_id: 'patientId', facility_id: 'facility', facility_name: 'facilityName', referral_id: 'referralId', specialty_required: 'specialty', current_stock: 'availableQuantity', last_updated: 'lastUpdated', order_id: 'orderId', test_name: 'test', x_ray: 'xRay', ecg: 'ecg', ct: 'ct', specialty: 'specialty', specialists: 'specialists', facilities: 'facilities', availability: 'availability', type: 'type', file_name: 'fileName' }; return <div style={{ overflowX: 'auto' }}><table className="gov-table"><thead><tr>{columns.map((column) => <th key={column}>{t(columnLabels[column] || column.replaceAll('_', ' '))}</th>)}</tr></thead><tbody>{rows.length ? rows.map((row, index) => <tr key={row.id || row.facility_id || row.name || index}>{columns.map((column) => <td key={column}>{column === 'status' ? <StatusBadge status={row[column]} /> : String(row[column] ?? '—')}</td>)}</tr>) : <tr><td colSpan={columns.length}>{t('noRecordsAvailable')}</td></tr>}</tbody></table></div>; }
+function Table({ rows, columns }) {
+  const { t, translateGender, translateSpecialty, translateFacilityType } = useLanguage();
+  const columnLabels = { name: 'name', role: 'role', status: 'status', check_in: 'checkIn', patient_id: 'patientId', facility_id: 'facility', facility_name: 'facilityName', referral_id: 'referralId', specialty_required: 'specialty', current_stock: 'availableQuantity', last_updated: 'lastUpdated', order_id: 'orderId', test_name: 'test', x_ray: 'xRay', ecg: 'ecg', ct: 'ct', specialty: 'specialty', specialists: 'specialists', facilities: 'facilities', availability: 'availability', type: 'type', file_name: 'fileName' };
 
-export const SupportingWorkflowPage = () => {
-  const key = useLocation().pathname.split('/').filter(Boolean).pop();
+  const formatValue = (row, column) => {
+    const val = row[column];
+    if (column === 'status' || column === 'availability') return <StatusBadge status={val} />;
+    if (column === 'gender') return translateGender(val);
+    if (column === 'specialty' || column === 'specialty_required') return translateSpecialty(val);
+    if (column === 'type') return translateFacilityType(val);
+    return String(val ?? '—');
+  };
+
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <table className="gov-table">
+        <thead>
+          <tr>
+            {columns.map((column) => <th key={column}>{t(columnLabels[column] || column.replaceAll('_', ' '))}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length ? rows.map((row, index) => (
+            <tr key={row.id || row.facility_id || row.name || index}>
+              {columns.map((column) => <td key={column}>{formatValue(row, column)}</td>)}
+            </tr>
+          )) : (
+            <tr><td colSpan={columns.length}>{t('noRecordsAvailable')}</td></tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export const SupportingWorkflowPage = ({ overrideKey }) => {
+  const routeKey = useLocation().pathname.split('/').filter(Boolean).pop();
+  const key = overrideKey || routeKey;
   const meta = pageMeta[key] || ['Healthcare Operations', 'Maha Health Connect supporting workflow.'];
   const { user } = useAuth();
   const { t } = useLanguage();

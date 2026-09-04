@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 
 export const DoctorDashboard = () => {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, translateSpecialty, translateStatus } = useLanguage();
 
   return (
     <div>
@@ -25,13 +25,13 @@ export const DoctorDashboard = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <div style={{ fontSize: '0.8125rem', color: '#F59E0B', fontWeight: '700', textTransform: 'uppercase' }}>
-              Specialist OPD & Consultation Portal
+              {t('specialistOpdPortal')}
             </div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: '800', marginTop: '0.25rem' }}>
-              {user?.name || 'डॉ. अनिकेत देशमुख'}
+              {user?.name || 'Dr. Aniket Deshmukh'}
             </h1>
             <p style={{ fontSize: '0.875rem', color: '#CBD5E1', marginTop: '0.25rem' }}>
-              Specialty: <strong>{user?.specialty || 'Cardiology'}</strong> • Facility: {user?.facility_name || 'District Hospital Aundh'}
+              {t('specialtyLabel')}: <strong>{translateSpecialty(user?.specialty || 'Cardiology')}</strong> • {t('facility')}: {user?.facility_name || 'District Hospital Aundh'}
             </p>
           </div>
 
@@ -49,7 +49,7 @@ export const DoctorDashboard = () => {
               <span>{t('rbacClearance')}</span>
             </div>
             <div style={{ color: '#CBD5E1', fontSize: '0.75rem', marginTop: '0.125rem' }}>
-              Access Granted via Token APT-8801 & REF-9901
+              {t('accessGrantedToken')} APT-8801 & REF-9901
             </div>
           </div>
         </div>
@@ -99,7 +99,7 @@ export const DoctorDashboard = () => {
           borderRadius: '10px',
           marginBottom: '1.5rem',
           display: 'flex',
-          justify: 'space-between',
+          justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: '1rem'
@@ -109,20 +109,20 @@ export const DoctorDashboard = () => {
           <ShieldCheck size={24} style={{ color: '#1E40AF' }} />
           <div>
             <div style={{ fontWeight: '700', color: '#1E3A8A', fontSize: '0.9375rem' }}>
-              Patient Record Access Control Policy
+              {t('accessPolicy')}
             </div>
             <div style={{ fontSize: '0.8125rem', color: '#1E40AF' }}>
-              Access authorized only for patients with active appointments/referrals. Record access window expires in 72 hours.
+              {t('authorizedRecordsVisibleNotice')}
             </div>
           </div>
         </div>
 
         <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.75rem', fontWeight: '700' }}>
           <span style={{ backgroundColor: '#DBEAFE', color: '#1E40AF', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>
-            PERMISSION: READ / PRESCRIPTION
+            {t('permissionReadPrescription')}
           </span>
           <span style={{ backgroundColor: '#DCFCE7', color: '#14532D', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>
-            AUDIT LOGGED
+            {t('auditLogged')}
           </span>
         </div>
       </div>
@@ -136,7 +136,7 @@ export const DoctorDashboard = () => {
               <span>{t('consultationQueue')}</span>
             </div>
             <Link to="/doctor/queue" style={{ fontSize: '0.8125rem', color: '#1E40AF', fontWeight: '600' }}>
-              Full Queue
+              {t('fullQueue')}
             </Link>
           </div>
 
@@ -154,10 +154,10 @@ export const DoctorDashboard = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <div style={{ fontWeight: '700', fontSize: '0.9375rem', color: '#0F2C59' }}>
-                      Token {apt.token_number}: {apt.patient_name}
+                      {t('token')} {apt.token_number}: {apt.patient_name}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                      ID: {apt.patient_id} • Time: {apt.time} • Type: {apt.type}
+                      {t('identifier')}: {apt.patient_id} • {t('time')}: {apt.time} • {t('type')}: {apt.type}
                     </div>
                   </div>
                   <StatusBadge status={apt.triage_priority} />
@@ -191,7 +191,7 @@ export const DoctorDashboard = () => {
               <div key={ref.referral_id} style={{ padding: '0.75rem', border: '1px solid #FCA5A5', borderRadius: '8px', backgroundColor: '#FEF2F2' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.375rem' }}>
                   <span style={{ fontWeight: '800', color: '#7F1D1D', fontSize: '0.875rem' }}>
-                    {ref.patient_name} ({ref.age} yrs)
+                    {ref.patient_name} ({ref.age} {t('yearsShort')})
                   </span>
                   <StatusBadge status={ref.priority} />
                 </div>
@@ -202,9 +202,9 @@ export const DoctorDashboard = () => {
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: '#7F1D1D', borderTop: '1px solid #FECACA', paddingTop: '0.375rem' }}>
-                  <span>{t('status')}: <strong>{ref.status}</strong> {t('acceptedBy')} District Hospital Aundh</span>
+                  <span>{t('status')}: <strong>{translateStatus(ref.status)}</strong> {t('acceptedBy')} District Hospital Aundh</span>
                   <Link to="/doctor/referrals" style={{ fontWeight: '700', color: '#1E40AF', textDecoration: 'none' }}>
-                    View Case File →
+                    {t('viewCaseFile')} →
                   </Link>
                 </div>
               </div>

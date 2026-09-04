@@ -33,48 +33,32 @@ export const Sidebar = ({ mobileOpen, closeMobileSidebar }) => {
       case 'patient':
         return [
           { to: '/patient', label: t('dashboard'), icon: <LayoutDashboard size={18} /> },
-          { to: '/patient/profile', label: t('myHealthProfile'), icon: <UserCheck size={18} /> },
-          { to: '/patient/appointments', label: t('appointments'), icon: <Calendar size={18} /> },
-          { to: '/patient/referrals', label: t('referralStatus'), icon: <GitPullRequest size={18} /> },
-          { to: '/patient/prescriptions', label: t('prescriptions'), icon: <FileText size={18} /> },
-          { to: '/patient/followups', label: t('followups'), icon: <Clock size={18} /> },
-          { to: '/patient/maternal', label: t('maternalHealthcare'), icon: <Baby size={18} /> },
-          { to: '/patient/services', label: t('serviceFinder'), icon: <Search size={18} /> },
-          { to: '/patient/nfc', label: t('nfcCardIdentification'), icon: <Radio size={18} /> }
+          { to: '/patient/health-record', label: t('healthRecord'), icon: <UserCheck size={18} /> },
+          { to: '/patient/appointments', label: t('appointmentsAndServices'), icon: <Calendar size={18} /> },
+          { to: '/patient/referrals', label: t('referralsAndCare'), icon: <GitPullRequest size={18} /> }
         ];
 
       case 'health_worker':
         return [
           { to: '/health-worker', label: t('dashboard'), icon: <LayoutDashboard size={18} /> },
-          { to: '/health-worker/register', label: t('patientRegistration'), icon: <Users size={18} /> },
-          { to: '/health-worker/patients', label: t('patientSearch'), icon: <Search size={18} /> },
-          { to: '/health-worker/triage', label: t('digitalTriage'), icon: <Activity size={18} /> },
-          { to: '/health-worker/appointments', label: t('appointments'), icon: <Calendar size={18} /> },
+          { to: '/health-worker/patients', label: t('patientManagement'), icon: <Users size={18} /> },
+          { to: '/health-worker/triage', label: t('triageAndCare'), icon: <Activity size={18} /> },
           { to: '/health-worker/referrals', label: t('referrals'), icon: <GitPullRequest size={18} /> },
-          { to: '/health-worker/documents', label: t('documentUpload'), icon: <Upload size={18} /> },
-          { to: '/health-worker/followups', label: t('followUps'), icon: <Clock size={18} /> },
-          { to: '/health-worker/maternal', label: t('maternalCare'), icon: <Baby size={18} /> },
           { to: '/health-worker/sync', label: t('offlineSync'), icon: <Wifi size={18} /> }
         ];
 
       case 'doctor':
         return [
           { to: '/doctor', label: t('dashboard'), icon: <LayoutDashboard size={18} /> },
-          { to: '/doctor/queue', label: t('queue'), icon: <ClipboardList size={18} /> },
-          { to: '/doctor/patients', label: t('authorizedPatients'), icon: <ShieldCheck size={18} /> },
-          { to: '/doctor/diagnostics', label: t('diagnostics'), icon: <Stethoscope size={18} /> },
-          { to: '/doctor/prescription', label: t('prescriptions'), icon: <FileText size={18} /> },
-          { to: '/doctor/referrals', label: t('referrals'), icon: <GitPullRequest size={18} /> },
-          { to: '/doctor/followups', label: t('followups'), icon: <Clock size={18} /> }
+          { to: '/doctor/queue', label: `${t('queue')} & ${t('appointments')}`, icon: <ClipboardList size={18} /> },
+          { to: '/doctor/patient-care', label: t('patientCareWorkstation'), icon: <Stethoscope size={18} /> },
+          { to: '/doctor/referrals', label: t('referrals'), icon: <GitPullRequest size={18} /> }
         ];
 
       case 'facility_admin':
         return [
           { to: '/facility-admin', label: t('dashboard'), icon: <LayoutDashboard size={18} /> },
-          { to: '/facility-admin/attendance', label: t('attendance'), icon: <UserCheck size={18} /> },
-          { to: '/facility-admin/doctors', label: t('doctorAvailability'), icon: <Stethoscope size={18} /> },
-          { to: '/facility-admin/medicines', label: t('medicines'), icon: <Pill size={18} /> },
-          { to: '/facility-admin/diagnostics', label: t('diagnosticCapacity'), icon: <Activity size={18} /> },
+          { to: '/facility-admin/resources', label: t('facilityResources'), icon: <Building size={18} /> },
           { to: '/facility-admin/referrals', label: t('hospitalReferralsInbox'), icon: <GitPullRequest size={18} /> },
           { to: '/facility-admin/analytics', label: t('reports'), icon: <BarChart3 size={18} /> }
         ];
@@ -82,12 +66,8 @@ export const Sidebar = ({ mobileOpen, closeMobileSidebar }) => {
       case 'district_authority':
         return [
           { to: '/district-authority', label: t('districtOverview'), icon: <LayoutDashboard size={18} /> },
-          { to: '/district-authority/facilities', label: t('facilityNetwork'), icon: <Building size={18} /> },
-          { to: '/district-authority/referral-analytics', label: t('referralAnalytics'), icon: <GitPullRequest size={18} /> },
-          { to: '/district-authority/medicine-analytics', label: t('medicineStocks'), icon: <Pill size={18} /> },
-          { to: '/district-authority/diagnostic-analytics', label: t('diagnosticCapacities'), icon: <Activity size={18} /> },
-          { to: '/district-authority/specialists', label: t('specialistDistribution'), icon: <Stethoscope size={18} /> },
-          { to: '/district-authority/audit-logs', label: t('securityAuditLogs'), icon: <ShieldCheck size={18} /> }
+          { to: '/district-authority/network', label: t('healthcareNetwork'), icon: <Building size={18} /> },
+          { to: '/district-authority/reports', label: t('reportsAndAudit'), icon: <ShieldCheck size={18} /> }
         ];
 
       default:

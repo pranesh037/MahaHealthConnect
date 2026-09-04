@@ -22,7 +22,7 @@ import { Link } from 'react-router-dom';
 
 export const HealthWorkerDashboard = () => {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, translateSpecialty } = useLanguage();
   const { isOnline, pendingSyncCount, triggerSync, isSyncing } = useOffline();
   const { patients } = usePatients();
 
@@ -44,7 +44,7 @@ export const HealthWorkerDashboard = () => {
               {t('field_health_worker_portal')} • {t('asha_anm_coord')}
             </div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: '800', marginTop: '0.25rem' }}>
-              सुप्रभात, {user?.name || 'सुनिता शिंदे'}
+              {t('greeting_good_morning')}, {user?.name || 'Sunita Shinde'}
             </h1>
             <p style={{ fontSize: '0.875rem', color: '#CBD5E1', marginTop: '0.25rem' }}>
               {t('facility')}: <strong>{user?.facility_name || 'PHC Mulshi'}</strong> • {t('district')}: {user?.district || 'Pune'}
@@ -156,7 +156,7 @@ export const HealthWorkerDashboard = () => {
                 key={pt.patient_id}
                 style={{
                   display: 'flex',
-                  justify: 'space-between',
+                  justifyContent: 'space-between',
                   alignItems: 'center',
                   padding: '0.625rem 0.75rem',
                   border: '1px solid #E2E8F0',
@@ -199,7 +199,7 @@ export const HealthWorkerDashboard = () => {
               <div key={ref.referral_id} style={{ padding: '0.75rem', border: '1px solid #E2E8F0', borderRadius: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
                   <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#0F2C59' }}>
-                    {ref.patient_name} ({ref.specialty_required})
+                    {ref.patient_name} ({translateSpecialty(ref.specialty_required)})
                   </div>
                   <StatusBadge status={ref.status} />
                 </div>
@@ -226,7 +226,7 @@ export const HealthWorkerDashboard = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.375rem 0' }}>
               <span>{t('doctorsOnDuty')}:</span>
-              <strong>2 Available</strong>
+              <strong>2 {t('available')}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.375rem 0', borderTop: '1px solid #E2E8F0' }}>
               <span>IFA Supplement {t('medicineStocks')}:</span>

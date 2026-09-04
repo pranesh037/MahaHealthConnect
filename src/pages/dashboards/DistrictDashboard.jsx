@@ -28,7 +28,7 @@ export const DistrictDashboard = () => {
               {t('districtOversight')}
             </div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: '800', marginTop: '0.25rem' }}>
-              {user?.name || 'डॉ. मीना कुलकर्णी'} (DHO)
+              {user?.name || 'Dr. Meena Kulkarni'} (DHO)
             </h1>
             <p style={{ fontSize: '0.875rem', color: '#CBD5E1', marginTop: '0.25rem' }}>
               {t('districtJurisdiction')}: <strong>Pune District (14 Talukas)</strong> • 28 PHCs, 6 District & Sub-District Hospitals

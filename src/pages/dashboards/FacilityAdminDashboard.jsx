@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 
 export const FacilityAdminDashboard = () => {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, translateSpecialty, translateDiagnostic } = useLanguage();
 
   return (
     <div>
@@ -25,13 +25,13 @@ export const FacilityAdminDashboard = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <div style={{ fontSize: '0.8125rem', color: '#F59E0B', fontWeight: '700', textTransform: 'uppercase' }}>
-              Hospital Administration & Resource Operations
+              {t('hospitalAdminHeader')}
             </div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: '800', marginTop: '0.25rem' }}>
-              {user?.name || 'राजेश पवार'}
+              {user?.name || 'Rajesh Pawar'}
             </h1>
             <p style={{ fontSize: '0.875rem', color: '#CBD5E1', marginTop: '0.25rem' }}>
-              Facility: <strong>{user?.facility_name || 'District Hospital Aundh'}</strong> • Active Beds: 350 (280 Occupied)
+              {t('facility')}: <strong>{user?.facility_name || 'District Hospital Aundh'}</strong> • {t('activeBeds')}: 350 (280 {t('occupied')})
             </p>
           </div>
 
@@ -98,12 +98,12 @@ export const FacilityAdminDashboard = () => {
               <div key={ref.referral_id} style={{ padding: '0.75rem', border: '1px solid #E2E8F0', borderRadius: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
                   <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#0F2C59' }}>
-                    {ref.patient_name} ({ref.specialty_required})
+                    {ref.patient_name} ({translateSpecialty(ref.specialty_required)})
                   </div>
                   <StatusBadge status={ref.status} />
                 </div>
                 <div style={{ fontSize: '0.8125rem', color: '#475569', marginBottom: '0.5rem' }}>
-                  From: <strong>{ref.referring_facility_name}</strong> • Notes: {ref.clinical_notes}
+                  {t('referredFrom')}: <strong>{ref.referring_facility_name}</strong> • {t('clinicalNote')}: {ref.clinical_notes}
                 </div>
 
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
@@ -111,7 +111,7 @@ export const FacilityAdminDashboard = () => {
                     ✓ {t('accepted')} ({t('facilityCapacity')})
                   </button>
                   <button className="gov-btn gov-btn-secondary gov-btn-sm">
-                    Re-route / Reject
+                    {t('rejectedRerouted')}
                   </button>
                 </div>
               </div>
@@ -127,7 +127,7 @@ export const FacilityAdminDashboard = () => {
               <span>{t('medicineAlertsTitle')}</span>
             </div>
             <Link to="/facility-admin/medicines" style={{ fontSize: '0.8125rem', color: '#1E40AF', fontWeight: '600' }}>
-              Full Stock
+              {t('viewAll')}
             </Link>
           </div>
 
@@ -137,7 +137,7 @@ export const FacilityAdminDashboard = () => {
                 <div>
                   <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#0F172A' }}>{med.name}</div>
                   <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                    Stock: {med.current_stock} {med.unit} (Min: {med.min_safety_stock})
+                    {t('stockLabel')}: {med.current_stock} {med.unit} ({t('minimumLabel')}: {med.min_safety_stock})
                   </div>
                 </div>
                 <StatusBadge status={med.status} />
@@ -159,7 +159,7 @@ export const FacilityAdminDashboard = () => {
             {MOCK_DIAGNOSTICS.map((diag) => (
               <div key={diag.test_id} style={{ padding: '0.625rem', border: '1px solid #E2E8F0', borderRadius: '6px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                  <span style={{ fontWeight: '700', fontSize: '0.875rem', color: '#0F2C59' }}>{diag.name}</span>
+                  <span style={{ fontWeight: '700', fontSize: '0.875rem', color: '#0F2C59' }}>{translateDiagnostic(diag.name)}</span>
                   <StatusBadge status={diag.status} />
                 </div>
                 <div style={{ fontSize: '0.75rem', color: '#475569' }}>

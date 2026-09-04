@@ -7,7 +7,7 @@ import { Calendar, GitPullRequest, FileText, MapPin, Radio, Clock, Shield } from
 
 export const PatientDashboard = () => {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, translateSpecialty, translateFacilityType } = useLanguage();
   const appointment = MOCK_APPOINTMENTS[0];
   const referral = MOCK_REFERRALS[0];
   const prescription = MOCK_PRESCRIPTIONS[0];
@@ -27,13 +27,13 @@ export const PatientDashboard = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <div style={{ fontSize: '0.8125rem', color: '#F59E0B', fontWeight: '700', textTransform: 'uppercase' }}>
-              Citizen Healthcare Portal • नागरिक आरोग्य पोर्टल
+              {t('citizenHealthcarePortal')}
             </div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: '800', marginTop: '0.25rem' }}>
-              सस्नेह नमस्कार, {user?.name || 'रमेश पाटील'}
+              {t('greeting_good_morning')}, {user?.name || 'Ramesh Patil'}
             </h1>
             <p style={{ fontSize: '0.875rem', color: '#CBD5E1', marginTop: '0.25rem' }}>
-              Patient ID: <strong>{user?.patient_id || 'PAT-10245'}</strong> • Village: {user?.village || 'Mulshi Gaon'}, {user?.district || 'Pune'}
+              {t('identifier')}: <strong>{user?.patient_id || 'PAT-10245'}</strong> • {t('village')}: {user?.village || 'Mulshi Gaon'}, {user?.district || 'Pune'}
             </p>
           </div>
 
@@ -108,10 +108,10 @@ export const PatientDashboard = () => {
           <div style={{ fontSize: '0.875rem' }}>
             <div style={{ marginBottom: '0.75rem', padding: '0.75rem', backgroundColor: '#ECFDF5', borderRadius: '8px', border: '1px solid #A7F3D0' }}>
               <div style={{ fontWeight: '700', color: '#065F46' }}>
-                Target Hospital: {referral.accepted_hospital}
+                {t('targetHospital')}: {referral.accepted_hospital}
               </div>
               <div style={{ fontSize: '0.8125rem', color: '#047857', marginTop: '0.25rem' }}>
-                Specialty: {referral.specialty_required} • Distance: 18.0 km
+                {t('specialtyLabel')}: {translateSpecialty(referral.specialty_required)} • {t('distanceLabel')}: 18.0 km
               </div>
             </div>
 
@@ -140,7 +140,7 @@ export const PatientDashboard = () => {
                 <div style={{ color: '#64748B' }}>{appointment.facility_name}</div>
               </div>
               <div style={{ backgroundColor: '#EFF6FF', color: '#1E40AF', padding: '0.5rem 0.875rem', borderRadius: '8px', fontWeight: '800', textAlign: 'center' }}>
-                TOKEN<br/>{appointment.token_number}
+                {t('token')}<br/>{appointment.token_number}
               </div>
             </div>
 
@@ -189,7 +189,7 @@ export const PatientDashboard = () => {
               <div key={fac.facility_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', border: '1px solid #E2E8F0', borderRadius: '6px' }}>
                 <div>
                   <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#0F2C59' }}>{fac.name}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#64748B' }}>{fac.type} • Distance: {fac.distance_km}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748B' }}>{translateFacilityType(fac.type)} • {t('distanceLabel')}: {fac.distance_km}</div>
                 </div>
                 <StatusBadge status={fac.status} />
               </div>
