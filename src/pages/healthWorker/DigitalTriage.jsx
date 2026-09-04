@@ -324,7 +324,7 @@ export const DigitalTriage = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
           <Info size={20} style={{ color: '#D97706', flexShrink: 0 }} />
           <div style={{ fontSize: '0.84375rem', color: '#92400E', fontWeight: '500' }}>
-            <strong>{t('noDiagnosisNotice')}:</strong> {t('clinicalDisclaimer')}
+            {t('clinicalDisclaimer')}
           </div>
         </div>
       </div>
