@@ -1,21 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useOffline } from '../../context/OfflineContext';
 import { usePatients } from '../../context/PatientContext';
 import { StatusBadge } from '../../components/common/StatusBadge';
-import { MOCK_REFERRALS, MOCK_FACILITIES } from '../../mockData';
+import { api } from '../../services/api';
 import {
   Users,
   Activity,
   GitPullRequest,
   Clock,
   Wifi,
-  Radio,
   PlusCircle,
-  Search,
-  CheckCircle2,
-  AlertTriangle,
   Building2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -25,6 +21,31 @@ export const HealthWorkerDashboard = () => {
   const { t, translateSpecialty } = useLanguage();
   const { isOnline, pendingSyncCount, triggerSync, isSyncing } = useOffline();
   const { patients } = usePatients();
+
+  const [referrals, setReferrals] = useState([]);
+  const [triages, setTriages] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchWorkerData = async () => {
+      try {
+        const [refsRes, trgRes] = await Promise.allSettled([
+          api.referrals(),
+          api.triages()
+        ]);
+        if (!isMounted) return;
+        setReferrals(refsRes.status === 'fulfilled' && Array.isArray(refsRes.value?.referrals) ? refsRes.value.referrals : []);
+        setTriages(trgRes.status === 'fulfilled' && Array.isArray(trgRes.value?.triages) ? trgRes.value.triages : []);
+      } catch (err) {
+        console.warn('Failed to load health worker dashboard data:', err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    fetchWorkerData();
+    return () => { isMounted = false; };
+  }, [user]);
 
   return (
     <div>
@@ -44,10 +65,10 @@ export const HealthWorkerDashboard = () => {
               {t('field_health_worker_portal')} • {t('asha_anm_coord')}
             </div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: '800', marginTop: '0.25rem' }}>
-              {t('greeting_good_morning')}, {user?.name || 'Sunita Shinde'}
+              {t('greeting_good_morning')}, {user?.name || 'Health Worker'}
             </h1>
             <p style={{ fontSize: '0.875rem', color: '#CBD5E1', marginTop: '0.25rem' }}>
-              {t('facility')}: <strong>{user?.facility_name || 'PHC Mulshi'}</strong> • {t('district')}: {user?.district || 'Pune'}
+              {t('facility')}: <strong>{user?.facility_name || 'PHC Facility'}</strong> • {t('district')}: {user?.district || 'Pune'}
             </p>
           </div>
 
@@ -76,7 +97,7 @@ export const HealthWorkerDashboard = () => {
 
         <div className="stat-card">
           <div>
-            <div className="stat-value">3</div>
+            <div className="stat-value">{triages.length}</div>
             <div className="stat-label">{t('pendingDigitalTriage')}</div>
           </div>
           <Activity style={{ color: '#D97706' }} />
@@ -84,7 +105,7 @@ export const HealthWorkerDashboard = () => {
 
         <div className="stat-card">
           <div>
-            <div className="stat-value">2</div>
+            <div className="stat-value">{referrals.length}</div>
             <div className="stat-label">{t('activeReferralsSent')}</div>
           </div>
           <GitPullRequest style={{ color: '#059669' }} />
@@ -92,7 +113,7 @@ export const HealthWorkerDashboard = () => {
 
         <div className="stat-card">
           <div>
-            <div className="stat-value">5</div>
+            <div className="stat-value">0</div>
             <div className="stat-label">{t('followupsDueWeek')}</div>
           </div>
           <Clock style={{ color: '#6B21A8' }} />
@@ -133,7 +154,7 @@ export const HealthWorkerDashboard = () => {
             </div>
 
             <div style={{ fontSize: '0.8125rem', color: '#475569' }}>
-              <strong>{t('recentActionLog')}:</strong> {t('registeredRecord')} PAT-10247 (Ganpat More) • ST Elevation
+              <strong>Active Worker Session:</strong> {user?.user_id || 'HW-ONLINE'} • {user?.facility_name || 'PHC'}
             </div>
           </div>
         </div>
@@ -151,34 +172,37 @@ export const HealthWorkerDashboard = () => {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {patients.slice(0, 4).map((pt) => (
-              <div
-                key={pt.patient_id}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '0.625rem 0.75rem',
-                  border: '1px solid #E2E8F0',
-                  borderRadius: '8px',
-                  backgroundColor: '#ffffff'
-                }}
-              >
-                <div>
-                  <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#0F2C59' }}>
-                    {pt.name} ({pt.age} {t('yearsShort')})
+            {patients.length > 0 ? (
+              patients.slice(0, 4).map((pt) => (
+                <div
+                  key={pt.patient_id || pt._id}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '0.625rem 0.75rem',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '8px',
+                    backgroundColor: '#ffffff'
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#0F2C59' }}>
+                      {pt.name} ({pt.age || '30'} {t('yearsShort')})
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                      {t('identifier')}: {pt.patient_id} • {t('village')}: {pt.village || 'General'}
+                    </div>
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                    {t('identifier')}: {pt.patient_id} • {t('village')}: {pt.village} {pt.vitals?.bp ? `• ${t('bloodPressureShort')}: ${pt.vitals.bp}` : ''}
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: '#DC2626', fontWeight: '500', marginTop: '0.125rem' }}>
-                    {t('reason')}: {pt.triage_reason || t('registeredRecord')}
-                  </div>
-                </div>
 
-                <StatusBadge status={pt.triage_status || 'NORMAL'} />
+                  <StatusBadge status={pt.triage_status || 'ROUTINE'} />
+                </div>
+              ))
+            ) : (
+              <div style={{ padding: '1rem 0', color: '#64748B', fontStyle: 'italic', textAlign: 'center' }}>
+                No patients registered under this facility yet.
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -195,22 +219,25 @@ export const HealthWorkerDashboard = () => {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {MOCK_REFERRALS.map((ref) => (
-              <div key={ref.referral_id} style={{ padding: '0.75rem', border: '1px solid #E2E8F0', borderRadius: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
-                  <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#0F2C59' }}>
-                    {ref.patient_name} ({translateSpecialty(ref.specialty_required)})
+            {referrals.length > 0 ? (
+              referrals.map((ref) => (
+                <div key={ref.referral_id || ref._id} style={{ padding: '0.75rem', border: '1px solid #E2E8F0', borderRadius: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
+                    <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#0F2C59' }}>
+                      {ref.patient_name} ({translateSpecialty(ref.specialty_required)})
+                    </div>
+                    <StatusBadge status={ref.status || 'SENT'} />
                   </div>
-                  <StatusBadge status={ref.status} />
+                  <div style={{ fontSize: '0.8125rem', color: '#475569' }}>
+                    {t('targetHospital')}: <strong>{ref.accepted_facility_name || ref.accepted_hospital || 'Matching...'}</strong>
+                  </div>
                 </div>
-                <div style={{ fontSize: '0.8125rem', color: '#475569' }}>
-                  {t('acceptedBy')}: <strong>{ref.accepted_hospital}</strong>
-                </div>
-                <div style={{ fontSize: '0.75rem', color: '#059669', marginTop: '0.25rem' }}>
-                  ✓ {t('secondaryHospitalCancelled')}
-                </div>
+              ))
+            ) : (
+              <div style={{ padding: '1rem 0', color: '#64748B', fontStyle: 'italic', textAlign: 'center' }}>
+                No referrals sent yet.
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -219,18 +246,14 @@ export const HealthWorkerDashboard = () => {
           <div className="gov-card-header">
             <div className="gov-card-title">
               <Building2 size={20} />
-              <span>{user?.facility_name || 'PHC Mulshi'} {t('facilityStatus')}</span>
+              <span>{user?.facility_name || 'PHC Facility'} {t('facilityStatus')}</span>
             </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.375rem 0' }}>
               <span>{t('doctorsOnDuty')}:</span>
-              <strong>2 {t('available')}</strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.375rem 0', borderTop: '1px solid #E2E8F0' }}>
-              <span>IFA Supplement {t('medicineStocks')}:</span>
-              <StatusBadge status="CRITICAL" customLabel={t('criticalStock')} />
+              <strong>Active Facility</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.375rem 0', borderTop: '1px solid #E2E8F0' }}>
               <span>{t('emergencyAmbulance')}:</span>
@@ -242,3 +265,4 @@ export const HealthWorkerDashboard = () => {
     </div>
   );
 };
+

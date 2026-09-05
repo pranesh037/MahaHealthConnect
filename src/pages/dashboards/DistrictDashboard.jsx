@@ -1,14 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { StatusBadge } from '../../components/common/StatusBadge';
+import { api } from '../../services/api';
 import { MOCK_FACILITIES } from '../../mockData';
-import { Building2, GitPullRequest, Pill, Activity, ShieldCheck, UserCheck, AlertTriangle, BarChart2 } from 'lucide-react';
+import { Building2, GitPullRequest, ShieldCheck, UserCheck, AlertTriangle, BarChart2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const DistrictDashboard = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
+
+  const [facilities, setFacilities] = useState([]);
+  const [referrals, setReferrals] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchDistrictData = async () => {
+      try {
+        const [facRes, refRes] = await Promise.allSettled([
+          api.facilities(),
+          api.referrals()
+        ]);
+        if (!isMounted) return;
+        setFacilities(facRes.status === 'fulfilled' && Array.isArray(facRes.value?.facilities) ? facRes.value.facilities : MOCK_FACILITIES);
+        setReferrals(refRes.status === 'fulfilled' && Array.isArray(refRes.value?.referrals) ? refRes.value.referrals : []);
+      } catch (err) {
+        console.warn('Failed to load district dashboard data:', err);
+      }
+    };
+    fetchDistrictData();
+    return () => { isMounted = false; };
+  }, [user]);
 
   return (
     <div>
@@ -28,10 +51,10 @@ export const DistrictDashboard = () => {
               {t('districtOversight')}
             </div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: '800', marginTop: '0.25rem' }}>
-              {user?.name || 'Dr. Meena Kulkarni'} (DHO)
+              {user?.name || 'District Health Officer'} (DHO)
             </h1>
             <p style={{ fontSize: '0.875rem', color: '#CBD5E1', marginTop: '0.25rem' }}>
-              {t('districtJurisdiction')}: <strong>Pune District (14 Talukas)</strong> • 28 PHCs, 6 District & Sub-District Hospitals
+              {t('districtJurisdiction')}: <strong>{user?.district || 'Pune'} District</strong> • {facilities.length || 34} Healthcare Facilities
             </p>
           </div>
 
@@ -52,7 +75,7 @@ export const DistrictDashboard = () => {
       <div className="grid-stats">
         <div className="stat-card">
           <div>
-            <div className="stat-value">34</div>
+            <div className="stat-value">{facilities.length || 34}</div>
             <div className="stat-label">{t('facilitiesLabel')}</div>
           </div>
           <Building2 style={{ color: '#1E40AF' }} />
@@ -60,7 +83,7 @@ export const DistrictDashboard = () => {
 
         <div className="stat-card">
           <div>
-            <div className="stat-value">33 / 34</div>
+            <div className="stat-value">{facilities.length || 33} / {facilities.length || 34}</div>
             <div className="stat-label">{t('facilitiesConnected')}</div>
           </div>
           <UserCheck style={{ color: '#059669' }} />
@@ -68,7 +91,7 @@ export const DistrictDashboard = () => {
 
         <div className="stat-card">
           <div>
-            <div className="stat-value">18</div>
+            <div className="stat-value">{referrals.length}</div>
             <div className="stat-label">{t('totalReferrals')}</div>
           </div>
           <GitPullRequest style={{ color: '#D97706' }} />
@@ -76,7 +99,7 @@ export const DistrictDashboard = () => {
 
         <div className="stat-card">
           <div>
-            <div className="stat-value">3</div>
+            <div className="stat-value">0</div>
             <div className="stat-label">{t('stockAlerts')}</div>
           </div>
           <AlertTriangle style={{ color: '#DC2626' }} />
@@ -97,16 +120,16 @@ export const DistrictDashboard = () => {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {MOCK_FACILITIES.map((fac) => (
-              <div key={fac.facility_id} style={{ padding: '0.75rem', border: '1px solid #E2E8F0', borderRadius: '8px' }}>
+            {facilities.slice(0, 5).map((fac) => (
+              <div key={fac.facility_id || fac._id} style={{ padding: '0.75rem', border: '1px solid #E2E8F0', borderRadius: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#0F2C59' }}>{fac.name}</div>
                     <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                      {t('taluka')}: {fac.taluka} • {t('doctors')}: {fac.doctor_count} • {t('beds')}: {fac.active_beds}
+                      {t('district')}: {fac.district || user?.district || 'Pune'} • {t('type')}: {fac.type || 'PHC'}
                     </div>
                   </div>
-                  <StatusBadge status={fac.status} />
+                  <StatusBadge status={fac.status || 'AVAILABLE'} />
                 </div>
               </div>
             ))}
@@ -138,19 +161,6 @@ export const DistrictDashboard = () => {
               <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#1E40AF', marginTop: '0.25rem' }}>
                 91.4% {t('coverage')}
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                Covering Mulshi, Haveli, and Baramati blocks
-              </div>
-            </div>
-
-            <div style={{ padding: '0.75rem', backgroundColor: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
-              <div style={{ fontWeight: '700', color: '#0F172A' }}>{t('medicineAvailabilityIndex')}</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#D97706', marginTop: '0.25rem' }}>
-                88.5% {t('sufficient')}
-              </div>
-              <div style={{ fontSize: '0.75rem', color: '#DC2626' }}>
-                {t('alert')}: IFA Red Supplement stock low in 4 rural PHCs
-              </div>
             </div>
           </div>
         </div>
@@ -158,3 +168,4 @@ export const DistrictDashboard = () => {
     </div>
   );
 };
+

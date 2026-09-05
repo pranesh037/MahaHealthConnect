@@ -612,6 +612,16 @@ app.post('/api/triage', authenticate, allow('health_worker'), async (req, res) =
   res.status(201).json({ triage: sanitizeDoc(record) });
 });
 
+app.get('/api/triages', authenticate, async (req, res) => {
+  const filter = req.user.role === 'patient'
+    ? { patient_id: req.user.patient_id }
+    : req.user.role === 'health_worker' || req.user.role === 'facility_admin'
+    ? { facility_id: req.user.facility_id }
+    : {};
+  const triages = await Triage.find(filter).sort({ created_at: -1 }).lean();
+  res.json({ triages: sanitizeArray(triages) });
+});
+
 const scoreFacility = async (
   facility,
   {
@@ -1023,10 +1033,33 @@ app.get('/api/followups', authenticate, async (req, res) => {
 
 app.get('/api/referrals', authenticate, async (req, res) => {
   try {
-    const filter =
-      req.user.role === 'patient'
-        ? { patient_id: req.user.patient_id }
-        : {};
+    let filter = {};
+    if (req.user.role === 'patient') {
+      filter = { patient_id: req.user.patient_id };
+    } else if (req.user.role === 'health_worker') {
+      filter = {
+        $or: [
+          { referring_facility_id: req.user.facility_id },
+          { referring_worker: req.user.name }
+        ]
+      };
+    } else if (req.user.role === 'doctor') {
+      filter = {
+        $or: [
+          { referring_facility_id: req.user.facility_id },
+          { 'target_hospitals.facility_id': req.user.facility_id },
+          { accepted_facility_id: req.user.facility_id }
+        ]
+      };
+    } else if (req.user.role === 'facility_admin') {
+      filter = {
+        $or: [
+          { referring_facility_id: req.user.facility_id },
+          { 'target_hospitals.facility_id': req.user.facility_id },
+          { accepted_facility_id: req.user.facility_id }
+        ]
+      };
+    }
 
     const referrals = await Referral.find(filter)
       .sort({ created_at: -1 })

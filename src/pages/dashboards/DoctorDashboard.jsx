@@ -1,14 +1,41 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { StatusBadge } from '../../components/common/StatusBadge';
-import { MOCK_APPOINTMENTS, MOCK_PATIENTS, MOCK_REFERRALS } from '../../mockData';
-import { Stethoscope, ClipboardList, ShieldCheck, FileText, AlertOctagon, UserCheck, Calendar, ArrowRight } from 'lucide-react';
+import { api } from '../../services/api';
+import { Stethoscope, ClipboardList, ShieldCheck, FileText, AlertOctagon, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const DoctorDashboard = () => {
   const { user } = useAuth();
   const { t, translateSpecialty, translateStatus } = useLanguage();
+
+  const [appointments, setAppointments] = useState([]);
+  const [referrals, setReferrals] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchDoctorData = async () => {
+      try {
+        const [aptsRes, refsRes] = await Promise.allSettled([
+          api.appointments(),
+          api.referrals()
+        ]);
+        if (!isMounted) return;
+        setAppointments(aptsRes.status === 'fulfilled' && Array.isArray(aptsRes.value?.appointments) ? aptsRes.value.appointments : []);
+        setReferrals(refsRes.status === 'fulfilled' && Array.isArray(refsRes.value?.referrals) ? refsRes.value.referrals : []);
+      } catch (err) {
+        console.warn('Failed to load doctor dashboard data:', err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    fetchDoctorData();
+    return () => { isMounted = false; };
+  }, [user]);
+
+  const highPriorityCount = referrals.filter(r => r.priority === 'HIGH' || r.priority === 'CRITICAL' || r.priority === 'EMERGENCY').length;
 
   return (
     <div>
@@ -28,10 +55,10 @@ export const DoctorDashboard = () => {
               {t('specialistOpdPortal')}
             </div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: '800', marginTop: '0.25rem' }}>
-              {user?.name || 'Dr. Aniket Deshmukh'}
+              {user?.name || 'Dr. Specialist'}
             </h1>
             <p style={{ fontSize: '0.875rem', color: '#CBD5E1', marginTop: '0.25rem' }}>
-              {t('specialtyLabel')}: <strong>{translateSpecialty(user?.specialty || 'Cardiology')}</strong> • {t('facility')}: {user?.facility_name || 'District Hospital Aundh'}
+              {t('specialtyLabel')}: <strong>{translateSpecialty(user?.specialty || 'General Medicine')}</strong> • {t('facility')}: {user?.facility_name || 'District Hospital'}
             </p>
           </div>
 
@@ -49,7 +76,7 @@ export const DoctorDashboard = () => {
               <span>{t('rbacClearance')}</span>
             </div>
             <div style={{ color: '#CBD5E1', fontSize: '0.75rem', marginTop: '0.125rem' }}>
-              {t('accessGrantedToken')} APT-8801 & REF-9901
+              Doctor Scope: {user?.user_id || 'USR-DOC'}
             </div>
           </div>
         </div>
@@ -59,7 +86,7 @@ export const DoctorDashboard = () => {
       <div className="grid-stats">
         <div className="stat-card">
           <div>
-            <div className="stat-value">14</div>
+            <div className="stat-value">{appointments.length}</div>
             <div className="stat-label">{t('appointments')}</div>
           </div>
           <Calendar style={{ color: '#1E40AF' }} />
@@ -67,7 +94,7 @@ export const DoctorDashboard = () => {
 
         <div className="stat-card">
           <div>
-            <div className="stat-value">4</div>
+            <div className="stat-value">{appointments.length}</div>
             <div className="stat-label">{t('queue')}</div>
           </div>
           <ClipboardList style={{ color: '#059669' }} />
@@ -75,7 +102,7 @@ export const DoctorDashboard = () => {
 
         <div className="stat-card">
           <div>
-            <div className="stat-value">2</div>
+            <div className="stat-value">{highPriorityCount}</div>
             <div className="stat-label">{t('highPriority')}</div>
           </div>
           <AlertOctagon style={{ color: '#DC2626' }} />
@@ -83,7 +110,7 @@ export const DoctorDashboard = () => {
 
         <div className="stat-card">
           <div>
-            <div className="stat-value">3</div>
+            <div className="stat-value">{referrals.length}</div>
             <div className="stat-label">{t('referrals')}</div>
           </div>
           <Stethoscope style={{ color: '#D97706' }} />
@@ -141,39 +168,45 @@ export const DoctorDashboard = () => {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {MOCK_APPOINTMENTS.map((apt) => (
-              <div
-                key={apt.appointment_id}
-                style={{
-                  padding: '0.75rem',
-                  border: '1px solid #E2E8F0',
-                  borderRadius: '8px',
-                  backgroundColor: '#ffffff'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ fontWeight: '700', fontSize: '0.9375rem', color: '#0F2C59' }}>
-                      {t('token')} {apt.token_number}: {apt.patient_name}
+            {appointments.length > 0 ? (
+              appointments.map((apt) => (
+                <div
+                  key={apt.appointment_id || apt._id}
+                  style={{
+                    padding: '0.75rem',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '8px',
+                    backgroundColor: '#ffffff'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: '700', fontSize: '0.9375rem', color: '#0F2C59' }}>
+                        {t('token')} {apt.token_number || '#1'}: {apt.patient_name}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                        {t('identifier')}: {apt.patient_id} • {t('time')}: {apt.time || 'Today'} • {t('type')}: {apt.type || 'OPD'}
+                      </div>
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                      {t('identifier')}: {apt.patient_id} • {t('time')}: {apt.time} • {t('type')}: {apt.type}
-                    </div>
+                    <StatusBadge status={apt.triage_priority || 'ROUTINE'} />
                   </div>
-                  <StatusBadge status={apt.triage_priority} />
-                </div>
 
-                <div style={{ marginTop: '0.625rem', display: 'flex', gap: '0.5rem' }}>
-                  <Link to="/doctor/prescription" className="gov-btn gov-btn-primary gov-btn-sm">
-                    <FileText size={14} />
-                    <span>{t('createPrescriptionAction')}</span>
-                  </Link>
-                  <Link to="/doctor/diagnostics" className="gov-btn gov-btn-secondary gov-btn-sm">
-                    <span>{t('orderDiagnostic')}</span>
-                  </Link>
+                  <div style={{ marginTop: '0.625rem', display: 'flex', gap: '0.5rem' }}>
+                    <Link to="/doctor/prescription" className="gov-btn gov-btn-primary gov-btn-sm">
+                      <FileText size={14} />
+                      <span>{t('createPrescriptionAction')}</span>
+                    </Link>
+                    <Link to="/doctor/diagnostics" className="gov-btn gov-btn-secondary gov-btn-sm">
+                      <span>{t('orderDiagnostic')}</span>
+                    </Link>
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div style={{ padding: '1rem 0', color: '#64748B', fontStyle: 'italic', textAlign: 'center' }}>
+                No OPD appointments scheduled in your queue.
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -187,31 +220,38 @@ export const DoctorDashboard = () => {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {MOCK_REFERRALS.map((ref) => (
-              <div key={ref.referral_id} style={{ padding: '0.75rem', border: '1px solid #FCA5A5', borderRadius: '8px', backgroundColor: '#FEF2F2' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.375rem' }}>
-                  <span style={{ fontWeight: '800', color: '#7F1D1D', fontSize: '0.875rem' }}>
-                    {ref.patient_name} ({ref.age} {t('yearsShort')})
-                  </span>
-                  <StatusBadge status={ref.priority} />
-                </div>
+            {referrals.length > 0 ? (
+              referrals.map((ref) => (
+                <div key={ref.referral_id || ref._id} style={{ padding: '0.75rem', border: '1px solid #FCA5A5', borderRadius: '8px', backgroundColor: '#FEF2F2' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.375rem' }}>
+                    <span style={{ fontWeight: '800', color: '#7F1D1D', fontSize: '0.875rem' }}>
+                      {ref.patient_name} ({ref.age || 45} {t('yearsShort')})
+                    </span>
+                    <StatusBadge status={ref.priority || 'NORMAL'} />
+                  </div>
 
-                <div style={{ fontSize: '0.8125rem', color: '#991B1B', marginBottom: '0.5rem' }}>
-                  <strong>{t('referredFrom')}:</strong> {ref.referring_facility_name}<br/>
-                  <strong>{t('clinicalNote')}:</strong> {ref.clinical_notes}
-                </div>
+                  <div style={{ fontSize: '0.8125rem', color: '#991B1B', marginBottom: '0.5rem' }}>
+                    <strong>{t('referredFrom')}:</strong> {ref.referring_facility_name || 'PHC'}<br/>
+                    <strong>{t('clinicalNote')}:</strong> {ref.clinical_notes || 'N/A'}
+                  </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: '#7F1D1D', borderTop: '1px solid #FECACA', paddingTop: '0.375rem' }}>
-                  <span>{t('status')}: <strong>{translateStatus(ref.status)}</strong> {t('acceptedBy')} District Hospital Aundh</span>
-                  <Link to="/doctor/referrals" style={{ fontWeight: '700', color: '#1E40AF', textDecoration: 'none' }}>
-                    {t('viewCaseFile')} →
-                  </Link>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: '#7F1D1D', borderTop: '1px solid #FECACA', paddingTop: '0.375rem' }}>
+                    <span>{t('status')}: <strong>{translateStatus(ref.status || 'SENT')}</strong></span>
+                    <Link to="/doctor/referrals" style={{ fontWeight: '700', color: '#1E40AF', textDecoration: 'none' }}>
+                      {t('viewCaseFile')} →
+                    </Link>
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div style={{ padding: '1rem 0', color: '#64748B', fontStyle: 'italic', textAlign: 'center' }}>
+                No emergency referrals pending review.
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 };
+

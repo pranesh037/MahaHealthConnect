@@ -74,7 +74,7 @@ export function evaluateAccess({ user, patient, requestedDataType }) {
 
   // 2. Patient Role -> Can view own record
   if (role === 'patient') {
-    if (patientId === user?.patient_id || user?.patient_id === 'PAT-10245') {
+    if (patientId && (patientId === user?.patient_id || patientId === user?.user_id)) {
       return {
         allowed: true,
         code: 'AUTHORIZED_PATIENT_OWN',

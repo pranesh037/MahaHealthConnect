@@ -29,6 +29,7 @@ export const api = {
   createPatient: (patient) => apiRequest('/patients', { method: 'POST', body: JSON.stringify(patient) }),
   getPatient: (patientId, dataType) => apiRequest(`/patients/${encodeURIComponent(patientId)}${dataType ? `?dataType=${dataType}` : ''}`),
   saveTriage: (triage) => apiRequest('/triage', { method: 'POST', body: JSON.stringify(triage) }),
+  triages: () => apiRequest('/triages'),
   facilities: () => apiRequest('/facilities'),
   medicines: () => apiRequest('/medicines'),
   updateFacilityResources: (facilityId, data) => apiRequest(`/facilities/${facilityId}/resources`, { method: 'PATCH', body: JSON.stringify(data) }),

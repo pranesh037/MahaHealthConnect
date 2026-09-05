@@ -24,25 +24,25 @@ export const PatientProfilePage = () => {
   const { patients } = usePatients();
   const { isOnline } = useOffline();
 
-  const patient = patients.find((p) => p.patient_id === user?.patient_id) || patients[0] || {
-    patient_id: user?.patient_id || 'PAT-10245',
-    name: user?.name || 'Ramesh Tukaram Patil',
-    age: 48,
-    gender: 'Male',
-    village: user?.village || 'Mulshi Gaon',
+  const patient = patients.find((p) => p.patient_id === user?.patient_id) || {
+    patient_id: user?.patient_id || user?.user_id || 'PAT-NEW',
+    name: user?.name || 'Registered Citizen',
+    age: user?.dob ? new Date().getFullYear() - new Date(user.dob).getFullYear() : 30,
+    gender: user?.gender || 'Other',
+    village: user?.village || 'General',
     district: user?.district || 'Pune',
-    phone: user?.phone || '+91 98220 12345',
-    emergency_contact: 'Sunita Patil (Wife) - +91 98220 54321',
-    vitals: { bp: '145/92', pulse: 84, temp: '98.6 °F', spo2: '97%', weight: '68 kg' },
+    phone: user?.phone || '',
+    emergency_contact: 'Not provided',
+    vitals: { bp: 'Normal', pulse: 72, temp: '98.6 °F', spo2: '98%', weight: 'N/A' },
     medical_info: {
-      allergies: 'Penicillin (Mild Rash)',
-      existing_conditions: 'Essential Hypertension, Type 2 Diabetes Mellitus',
-      blood_group: 'O+'
+      allergies: 'None reported',
+      existing_conditions: 'None',
+      blood_group: user?.blood_group || 'O+'
     }
   };
 
-  const patientAppointments = MOCK_APPOINTMENTS.filter((a) => a.patient_id === patient.patient_id || true);
-  const patientReferrals = MOCK_REFERRALS.filter((r) => r.patient_id === patient.patient_id || true);
+  const patientAppointments = MOCK_APPOINTMENTS.filter((a) => a.patient_id === patient.patient_id);
+  const patientReferrals = MOCK_REFERRALS.filter((r) => r.patient_id === patient.patient_id);
 
   const recentVisits = [
     { date: '2026-08-25', facility: 'PHC Mulshi', doctor: 'Sunita Shinde (ANM)', reason: 'Hypertension Follow-up & Vitals check', outcome: 'Referral requested' },
