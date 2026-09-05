@@ -23,7 +23,6 @@ import { DigitalTriage } from './pages/healthWorker/DigitalTriage';
 
 import { PatientProfilePage } from './pages/patient/PatientProfilePage';
 import { PatientMaternalPage } from './pages/patient/PatientMaternalPage';
-import { PatientNfcPage } from './pages/patient/PatientNfcPage';
 import { PatientHealthRecord } from './pages/patient/PatientHealthRecord';
 import { PatientAppointmentsServices } from './pages/patient/PatientAppointmentsServices';
 import { PatientReferralsCare } from './pages/patient/PatientReferralsCare';
@@ -47,7 +46,8 @@ import { DistrictNetwork } from './pages/district/DistrictNetwork';
 import { DistrictReportsAudit } from './pages/district/DistrictReportsAudit';
 
 const RoleBasedRedirect = () => {
-  const { role, isAuthenticated } = useAuth();
+  const { role, isAuthenticated, loading } = useAuth();
+  if (loading) return null;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   switch (role) {
@@ -86,7 +86,6 @@ export function App() {
                     <Route path="/patient/followups" element={<CriticalWorkflowPage overrideKey="followups" />} />
                     <Route path="/patient/maternal" element={<PatientMaternalPage />} />
                     <Route path="/patient/services" element={<CriticalWorkflowPage overrideKey="services" />} />
-                    <Route path="/patient/nfc" element={<PatientNfcPage />} />
 
                     {/* Health Worker Routes */}
                     <Route path="/health-worker" element={<HealthWorkerDashboard />} />
@@ -95,6 +94,7 @@ export function App() {
                     <Route path="/health-worker/triage" element={<HealthWorkerTriageCare />} />
                     <Route path="/health-worker/appointments" element={<CriticalWorkflowPage overrideKey="appointments" />} />
                     <Route path="/health-worker/referrals" element={<CriticalWorkflowPage overrideKey="referrals" />} />
+                    <Route path="/health-worker/access" element={<CriticalWorkflowPage overrideKey="access" />} />
                     <Route path="/health-worker/documents" element={<HealthWorkerDocumentsPage />} />
                     <Route path="/health-worker/followups" element={<CriticalWorkflowPage overrideKey="followups" />} />
                     <Route path="/health-worker/maternal" element={<HealthWorkerMaternalPage />} />
@@ -109,6 +109,10 @@ export function App() {
                     <Route path="/doctor/diagnostics" element={<CriticalWorkflowPage overrideKey="diagnostics" />} />
                     <Route path="/doctor/prescription" element={<CriticalWorkflowPage overrideKey="prescription" />} />
                     <Route path="/doctor/referrals" element={<CriticalWorkflowPage overrideKey="referrals" />} />
+                    <Route
+                      path="/doctor/access"
+                      element={<CriticalWorkflowPage overrideKey="access" />}
+                    />
                     <Route path="/doctor/followups" element={<CriticalWorkflowPage overrideKey="followups" />} />
 
                     {/* Facility Administrator Routes */}

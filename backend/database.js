@@ -1,28 +1,65 @@
-import pg from 'pg';
-import fs from 'node:fs/promises';
-import path from 'node:path';
+import mongoose from 'mongoose';
+import 'dotenv/config';
 
-const { Pool } = pg;
-export const databaseConfigured = Boolean(process.env.DATABASE_URL);
-export const pool = databaseConfigured ? new Pool({ connectionString: process.env.DATABASE_URL, max: 5, idleTimeoutMillis: 10000 }) : null;
+let activeMode = 'disconnected';
+
+export const databaseConfigured = Boolean(process.env.MONGODB_URI);
+
+const sanitizeErrorMessage = (msg = '') => {
+  return String(msg)
+    .replace(/mongodb\+srv:\/\/[^@]+@/gi, 'mongodb+srv://<redacted>@')
+    .replace(/mongodb:\/\/[^@]+@/gi, 'mongodb://<redacted>@')
+    .replace(/:[^:@]+@/g, ':<redacted>@');
+};
 
 export async function initializeDatabase() {
-  if (!pool) return false;
-  const schema = await fs.readFile(path.join(process.cwd(), 'backend', 'schema.sql'), 'utf8');
-  await pool.query(schema);
-  return true;
-}
+  if (mongoose.connection.readyState === 1) {
+    return true;
+  }
 
-export async function databaseHealth() {
-  if (!pool) return { configured: false, connected: false };
+  const uri = process.env.MONGODB_URI;
+
+  if (!uri) {
+    console.error('MONGODB_URI is not defined in environment.');
+    activeMode = 'disconnected';
+    return false;
+  }
+
   try {
-    await pool.query('SELECT 1');
-    return { configured: true, connected: true };
+    await mongoose.connect(uri, {
+      dbName: 'maha_health_connect',
+      serverSelectionTimeoutMS: 10000
+    });
+    console.log('Connected to MongoDB Atlas successfully');
+    activeMode = 'MongoDB Atlas';
+    return true;
   } catch (error) {
-    return { configured: true, connected: false, error: error.message };
+    const cleanError = sanitizeErrorMessage(error.message);
+    console.error('MongoDB Atlas connection failed:', cleanError);
+    activeMode = 'disconnected';
+    return false;
   }
 }
 
+export async function databaseHealth() {
+  const isConnected = mongoose.connection.readyState === 1;
+  return {
+    configured: Boolean(process.env.MONGODB_URI),
+    connected: isConnected,
+    mode: isConnected ? activeMode : 'disconnected'
+  };
+}
+
 export async function closeDatabase() {
-  if (pool) await pool.end();
+  if (mongoose.connection.readyState !== 0) {
+    try {
+      if (mongoose.connection.readyState === 1) {
+        await mongoose.connection.db.admin().command({ fsync: 1 });
+      }
+    } catch {
+      // Ignore
+    }
+    await mongoose.disconnect();
+  }
+  activeMode = 'disconnected';
 }

@@ -1,30 +1,83 @@
-import React, { createContext, useContext, useState } from 'react';
-import { MOCK_USERS } from '../mockData';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '../services/api';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  // Default demo role is health_worker for quick inspection, user can switch anytime
-  const [currentRole, setCurrentRole] = useState('health_worker');
-  const [currentUser, setCurrentUser] = useState(MOCK_USERS.health_worker);
+  const [currentRole, setCurrentRole] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const switchRole = (roleKey) => {
-    if (MOCK_USERS[roleKey]) {
-      setCurrentRole(roleKey);
-      setCurrentUser(MOCK_USERS[roleKey]);
-    }
-  };
+  // Restore authenticated session from backend JWT on app initialization
+  useEffect(() => {
+    const initAuth = async () => {
+      const token = localStorage.getItem('mhc_access_token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const res = await api.me();
+        if (res && res.user && res.user.role) {
+          setCurrentUser(res.user);
+          setCurrentRole(res.user.role);
+        } else {
+          localStorage.removeItem('mhc_access_token');
+          setCurrentRole(null);
+          setCurrentUser(null);
+        }
+      } catch (err) {
+        console.warn('Session restoration failed or token expired:', err.message);
+        localStorage.removeItem('mhc_access_token');
+        setCurrentRole(null);
+        setCurrentUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initAuth();
+  }, []);
 
   const loginAsUser = async (username, password, selectedRole) => {
     try {
-      const result = await api.login({ username, password, role: selectedRole || 'patient' });
+      const result = await api.login({
+        username,
+        password,
+        role: selectedRole
+      });
+
       localStorage.setItem('mhc_access_token', result.token);
+      window.dispatchEvent(new Event('mhc-auth-changed'));
+
       setCurrentRole(result.user.role);
       setCurrentUser(result.user);
-      return { success: true };
+
+      return { success: true, user: result.user, role: result.user.role };
     } catch (error) {
-      return { success: false, error: error.message };
+      return {
+        success: false,
+        error: error.message || 'Login failed'
+      };
+    }
+  };
+
+  const registerUser = async (payload) => {
+    try {
+      const result = await api.register(payload);
+
+      localStorage.setItem('mhc_access_token', result.token);
+      window.dispatchEvent(new Event('mhc-auth-changed'));
+
+      setCurrentRole(result.user.role);
+      setCurrentUser(result.user);
+
+      return { success: true, user: result.user, role: result.user.role };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message || 'Registration failed'
+      };
     }
   };
 
@@ -32,11 +85,12 @@ export const AuthProvider = ({ children }) => {
     try {
       if (localStorage.getItem('mhc_access_token')) await api.logout();
     } catch {
-      // Clear the local session even when the network is unavailable.
+      // Clear local session even if network fails
     }
     localStorage.removeItem('mhc_access_token');
     setCurrentRole(null);
     setCurrentUser(null);
+    window.dispatchEvent(new Event('mhc-auth-changed'));
   };
 
   return (
@@ -44,8 +98,9 @@ export const AuthProvider = ({ children }) => {
       value={{
         role: currentRole,
         user: currentUser,
-        switchRole,
+        loading,
         loginAsUser,
+        registerUser,
         logout,
         isAuthenticated: !!currentRole
       }}

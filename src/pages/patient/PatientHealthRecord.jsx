@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { PatientProfilePage } from './PatientProfilePage';
 import { PatientMaternalPage } from './PatientMaternalPage';
-import { PatientNfcPage } from './PatientNfcPage';
 import { CriticalWorkflowPage } from '../CriticalWorkflowPage';
-import { UserCheck, FileText, Stethoscope, Baby, Radio } from 'lucide-react';
+import { UserCheck, FileText, Stethoscope, Baby } from 'lucide-react';
 
 export const PatientHealthRecord = () => {
   const { t } = useLanguage();
@@ -14,8 +13,7 @@ export const PatientHealthRecord = () => {
     { id: 'profile', label: t('myProfile'), icon: <UserCheck size={18} /> },
     { id: 'prescriptions', label: t('prescriptions'), icon: <FileText size={18} /> },
     { id: 'diagnostics', label: t('diagnostics'), icon: <Stethoscope size={18} /> },
-    { id: 'maternal', label: t('maternalHealthcare'), icon: <Baby size={18} /> },
-    { id: 'nfc', label: t('nfcCardIdentification'), icon: <Radio size={18} /> }
+    { id: 'maternal', label: t('maternalHealthcare'), icon: <Baby size={18} /> }
   ];
 
   return (
@@ -68,7 +66,6 @@ export const PatientHealthRecord = () => {
         {activeTab === 'prescriptions' && <CriticalWorkflowPage overrideKey="prescription" />}
         {activeTab === 'diagnostics' && <CriticalWorkflowPage overrideKey="diagnostics" />}
         {activeTab === 'maternal' && <PatientMaternalPage />}
-        {activeTab === 'nfc' && <PatientNfcPage />}
       </div>
     </div>
   );

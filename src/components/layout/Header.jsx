@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 export const Header = ({ toggleMobileSidebar }) => {
-  const { role, user, logout, switchRole } = useAuth();
+  const { role, user, logout } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const { isOnline, toggleNetworkStatus, pendingSyncCount, triggerSync, isSyncing } = useOffline();
   
@@ -271,51 +271,12 @@ export const Header = ({ toggleMobileSidebar }) => {
                 border: '1px solid #E2E8F0'
               }}
             >
-              <div style={{ padding: '0.5rem', borderBottom: '1px solid #E2E8F0', marginBottom: '0.5rem' }}>
-                <div style={{ fontWeight: '700', fontSize: '0.875rem' }}>{user?.name}</div>
+              <div style={{ padding: '0.5rem', borderBottom: '1px solid #E2E8F0', marginBottom: '0.25rem' }}>
+                <div style={{ fontWeight: '700', fontSize: '0.875rem' }}>{user?.name || 'User'}</div>
                 <div style={{ fontSize: '0.75rem', color: '#64748B' }}>{getRoleLabel()}</div>
               </div>
 
-              <div style={{ padding: '0.375rem 0.5rem', fontSize: '0.75rem', fontWeight: '700', color: '#475569' }}>
-                SWITCH DEMO ROLE (SIH JUDGE DEMO):
-              </div>
-              <button
-                className="sidebar-link"
-                onClick={() => { switchRole('health_worker'); setShowProfileMenu(false); }}
-                style={{ width: '100%', fontSize: '0.8125rem' }}
-              >
-                Health Worker (ASHA)
-              </button>
-              <button
-                className="sidebar-link"
-                onClick={() => { switchRole('doctor'); setShowProfileMenu(false); }}
-                style={{ width: '100%', fontSize: '0.8125rem' }}
-              >
-                Doctor / Specialist
-              </button>
-              <button
-                className="sidebar-link"
-                onClick={() => { switchRole('facility_admin'); setShowProfileMenu(false); }}
-                style={{ width: '100%', fontSize: '0.8125rem' }}
-              >
-                Facility Administrator
-              </button>
-              <button
-                className="sidebar-link"
-                onClick={() => { switchRole('patient'); setShowProfileMenu(false); }}
-                style={{ width: '100%', fontSize: '0.8125rem' }}
-              >
-                Citizen / Patient
-              </button>
-              <button
-                className="sidebar-link"
-                onClick={() => { switchRole('district_authority'); setShowProfileMenu(false); }}
-                style={{ width: '100%', fontSize: '0.8125rem' }}
-              >
-                District Authority (DHO)
-              </button>
-
-              <div style={{ borderTop: '1px solid #E2E8F0', marginTop: '0.5rem', paddingTop: '0.375rem' }}>
+              <div style={{ paddingTop: '0.25rem' }}>
                 <button
                   onClick={logout}
                   style={{
@@ -329,8 +290,11 @@ export const Header = ({ toggleMobileSidebar }) => {
                     color: '#DC2626',
                     fontWeight: '600',
                     fontSize: '0.8125rem',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    borderRadius: '4px',
+                    transition: 'background-color 0.2s'
                   }}
+                  className="sidebar-link"
                 >
                   <LogOut size={16} />
                   <span>{t('logout')}</span>

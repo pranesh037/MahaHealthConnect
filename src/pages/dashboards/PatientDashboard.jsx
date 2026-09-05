@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { MOCK_APPOINTMENTS, MOCK_REFERRALS, MOCK_PRESCRIPTIONS, MOCK_FACILITIES } from '../../mockData';
-import { Calendar, GitPullRequest, FileText, MapPin, Radio, Clock, Shield } from 'lucide-react';
+import { Calendar, GitPullRequest, FileText, MapPin, Clock, Shield } from 'lucide-react';
 
 export const PatientDashboard = () => {
   const { user } = useAuth();
@@ -35,26 +35,6 @@ export const PatientDashboard = () => {
             <p style={{ fontSize: '0.875rem', color: '#CBD5E1', marginTop: '0.25rem' }}>
               {t('identifier')}: <strong>{user?.patient_id || 'PAT-10245'}</strong> • {t('village')}: {user?.village || 'Mulshi Gaon'}, {user?.district || 'Pune'}
             </p>
-          </div>
-
-          <div
-            style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              padding: '0.75rem 1rem',
-              borderRadius: '8px',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem'
-            }}
-          >
-            <Radio size={24} style={{ color: '#F59E0B' }} />
-            <div>
-              <div style={{ fontSize: '0.75rem', color: '#CBD5E1' }}>{t('nfcCardIdentification')}</div>
-              <div style={{ fontSize: '0.875rem', fontWeight: '700', fontFamily: 'monospace' }}>
-                {user?.nfc_token || 'NFC-PAT-10245-MH'}
-              </div>
-            </div>
           </div>
         </div>
       </div>

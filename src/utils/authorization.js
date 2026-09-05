@@ -51,7 +51,14 @@ export const MOCK_RELATIONSHIPS = [
 ];
 
 export function evaluateAccess({ user, patient, requestedDataType }) {
-  const role = user?.role || 'health_worker';
+  const role = user?.role || null;
+  if (!role) {
+    return {
+      allowed: false,
+      code: 'UNAUTHENTICATED',
+      reason: 'Authentication required.'
+    };
+  }
   const userFacilityId = user?.facility_id || 'FAC-101';
   const patientFacilityId = patient?.registered_facility_id || patient?.facility_id || 'FAC-101';
   const patientId = patient?.patient_id;

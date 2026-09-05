@@ -22,6 +22,7 @@ export async function apiRequest(path, options = {}) {
 
 export const api = {
   login: (credentials) => apiRequest('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
+  register: (payload) => apiRequest('/auth/register', { method: 'POST', body: JSON.stringify(payload) }),
   logout: () => apiRequest('/auth/logout', { method: 'POST' }),
   me: () => apiRequest('/me'),
   patients: (query = '') => apiRequest(`/patients${query ? `?q=${encodeURIComponent(query)}` : ''}`),
@@ -38,7 +39,20 @@ export const api = {
   updateQueue: (id, status) => apiRequest(`/queue/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
   referrals: () => apiRequest('/referrals'),
   createReferral: (referral) => apiRequest('/referrals', { method: 'POST', body: JSON.stringify(referral) }),
+
   decideReferral: (referralId, decision) => apiRequest(`/referrals/${referralId}/decision`, { method: 'PATCH', body: JSON.stringify(decision) }),
+  accessGrants: () =>
+    apiRequest('/access-grants'),
+
+  createAccessGrant: (payload) =>
+    apiRequest('/access-grants', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
+  revokeAccessGrant: (grantId) =>
+    apiRequest(`/access-grants/${grantId}/revoke`, {
+      method: 'PATCH'
+    }),
   createConsultation: (data) => apiRequest('/consultations', { method: 'POST', body: JSON.stringify(data) }),
   createPrescription: (data) => apiRequest('/prescriptions', { method: 'POST', body: JSON.stringify(data) }),
   prescriptions: () => apiRequest('/prescriptions'),

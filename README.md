@@ -14,9 +14,14 @@ Run the last two commands in separate terminals. The API runs at `http://localho
 
 ## Environment and Database
 
-Copy `.env.example` to `.env` and set `JWT_SECRET`. `DATABASE_URL` is reserved for the PostgreSQL deployment path. The local API falls back to seeded in-memory demo data when PostgreSQL is not configured, so the workflow remains demonstrable without real patient data.
+Copy `.env.example` to `.env` and set `JWT_SECRET` and `MONGODB_URI`. `MONGODB_URI` connects to your MongoDB Atlas cluster. The API reads `MONGODB_URI` directly from `process.env`. If `MONGODB_URI` is omitted during local development or testing, an in-memory MongoDB instance is dynamically initialized so that persistence and API endpoints remain fully functional without requiring external setup.
 
-The PostgreSQL schema is in `backend/schema.sql` and covers users, facilities, patients, triage, appointments, referrals, referral targets, and audit logs. Apply it to a demo database with `psql` when preparing the database environment.
+Mongoose models in `backend/models/` define the document schemas for users, patients, facilities, appointments, triage records, referrals, prescriptions, diagnostics, follow-ups, medicines, equipment, beds, consultations, and audit logs.
+
+Synthetic data can be seeded into MongoDB at any time by running:
+```bash
+node backend/seed.js
+```
 
 ## Demo Accounts
 
@@ -44,6 +49,6 @@ Use the header network control or browser offline mode. Triage entries and sync 
 
 ## Architecture and Limitations
 
-The frontend retains the existing contexts, dashboards, translations, rule-based triage engine, and visual language. The API owns JWT verification, role checks, facility-scoped patient access, duplicate phone detection, and audit events. The current server uses seeded memory storage for the student demo; the PostgreSQL schema is provided, while a full persistence adapter, SMS/NFC hardware, ABHA, and teleconsultation integrations remain intentionally out of scope.
+The frontend retains the existing contexts, dashboards, translations, rule-based triage engine, and visual language. The API owns JWT verification, role checks, facility-scoped patient access, duplicate phone detection, audit events, and MongoDB Mongoose persistence.
 
 This is a demonstrator, not a production-certified medical system. Triage is deterministic workflow support and does not provide autonomous diagnosis or medical advice.

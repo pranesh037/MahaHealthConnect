@@ -44,6 +44,7 @@ export const Sidebar = ({ mobileOpen, closeMobileSidebar }) => {
           { to: '/health-worker/patients', label: t('patientManagement'), icon: <Users size={18} /> },
           { to: '/health-worker/triage', label: t('triageAndCare'), icon: <Activity size={18} /> },
           { to: '/health-worker/referrals', label: t('referrals'), icon: <GitPullRequest size={18} /> },
+          { to: '/health-worker/access', label: 'Secure Doctor Access', icon: <ShieldCheck size={18} /> },
           { to: '/health-worker/sync', label: t('offlineSync'), icon: <Wifi size={18} /> }
         ];
 
@@ -52,7 +53,8 @@ export const Sidebar = ({ mobileOpen, closeMobileSidebar }) => {
           { to: '/doctor', label: t('dashboard'), icon: <LayoutDashboard size={18} /> },
           { to: '/doctor/queue', label: `${t('queue')} & ${t('appointments')}`, icon: <ClipboardList size={18} /> },
           { to: '/doctor/patient-care', label: t('patientCareWorkstation'), icon: <Stethoscope size={18} /> },
-          { to: '/doctor/referrals', label: t('referrals'), icon: <GitPullRequest size={18} /> }
+          { to: '/doctor/referrals', label: t('referrals'), icon: <GitPullRequest size={18} /> },
+          { to: '/doctor/access', label: 'Secure Doctor Access', icon: <ShieldCheck size={18} /> }
         ];
 
       case 'facility_admin':

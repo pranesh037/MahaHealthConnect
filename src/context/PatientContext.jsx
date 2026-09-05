@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { MOCK_PATIENTS } from '../mockData';
 import { api } from '../services/api';
 
@@ -7,81 +7,280 @@ const PatientContext = createContext();
 const STORAGE_KEY = 'maha_health_connect_patients';
 
 export const PatientProvider = ({ children }) => {
-  const [patients, setPatients] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (e) {
-      console.error('Failed to load patients from localStorage:', e);
-    }
-    return MOCK_PATIENTS;
-  });
+  const [patients, setPatients] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const loadPatients = async () => {
+    const token = localStorage.getItem('mhc_access_token');
+
+    // If the user is not logged in, use local data only.
+    if (!token) {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+
+        if (saved) {
+          setPatients(JSON.parse(saved));
+        } else {
+          setPatients(MOCK_PATIENTS);
+        }
+      } catch (error) {
+        console.error('Failed to load local patients:', error);
+        setPatients(MOCK_PATIENTS);
+      }
+
+      setLoading(false);
+      return;
+    }
+
+    // Logged in: MongoDB is the source of truth.
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(patients));
-    } catch (e) {
-      console.error('Failed to save patients to localStorage:', e);
+      setLoading(true);
+
+      const response = await api.patients();
+
+      const serverPatients = Array.isArray(response?.patients)
+        ? response.patients
+        : [];
+
+      setPatients(serverPatients);
+
+      // Keep a local copy for offline/read-only fallback.
+      try {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify(serverPatients)
+        );
+      } catch (storageError) {
+        console.error(
+          'Failed to cache patients locally:',
+          storageError
+        );
+      }
+    } catch (error) {
+      console.error(
+        'Failed to load patients from MongoDB:',
+        error
+      );
+
+      // Use cached data only if the API is temporarily unavailable.
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+
+        if (saved) {
+          setPatients(JSON.parse(saved));
+        } else {
+          setPatients(MOCK_PATIENTS);
+        }
+      } catch (localError) {
+        console.error(
+          'Failed to load cached patients:',
+          localError
+        );
+
+        setPatients(MOCK_PATIENTS);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /*
+   * Load MongoDB patients when the provider starts.
+   */
+  useEffect(() => {
+    loadPatients();
+
+    const handleAuthChange = () => {
+      loadPatients();
+    };
+
+    window.addEventListener(
+      'mhc-auth-changed',
+      handleAuthChange
+    );
+
+    return () => {
+      window.removeEventListener(
+        'mhc-auth-changed',
+        handleAuthChange
+      );
+    };
+  }, []);
+
+  /*
+   * Keep local cache updated.
+   */
+  useEffect(() => {
+    if (!patients.length) return;
+
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(patients)
+      );
+    } catch (error) {
+      console.error(
+        'Failed to save patients locally:',
+        error
+      );
     }
   }, [patients]);
 
+  /*
+   * Generate a new patient ID.
+   *
+   * Existing synthetic database contains:
+   * PAT-MH-000001 ... PAT-MH-000500
+   *
+   * So the next registration becomes:
+   * PAT-MH-000501
+   */
   const generatePatientId = () => {
-    const mhPatients = patients.filter(p => p.patient_id && p.patient_id.startsWith('PAT-MH-'));
-    let maxNum = 127; // Default start index so next is 000128
-    
-    mhPatients.forEach(p => {
-      const match = p.patient_id.match(/^PAT-MH-(\d+)$/);
+    const mhPatients = patients.filter(
+      (patient) =>
+        patient.patient_id &&
+        patient.patient_id.startsWith('PAT-MH-')
+    );
+
+    let maxNum = 0;
+
+    mhPatients.forEach((patient) => {
+      const match = patient.patient_id.match(
+        /^PAT-MH-(\d+)$/
+      );
+
       if (match) {
-        const num = parseInt(match[1], 10);
-        if (num > maxNum) maxNum = num;
+        const number = parseInt(match[1], 10);
+
+        if (number > maxNum) {
+          maxNum = number;
+        }
       }
     });
 
     const nextNum = maxNum + 1;
+
     return `PAT-MH-${String(nextNum).padStart(6, '0')}`;
   };
 
+  /*
+   * Register a new patient.
+   *
+   * Logged in:
+   *   React → Express → MongoDB
+   *
+   * Not logged in:
+   *   local fallback
+   */
   const addPatient = async (patientData) => {
     const newPatient = {
       ...patientData,
-      registered_at: patientData.registered_at || new Date().toISOString().replace('T', ' ').substring(0, 19),
+      patient_id:
+        patientData.patient_id || generatePatientId(),
+      registered_at:
+        patientData.registered_at ||
+        new Date().toISOString()
     };
 
-    if (localStorage.getItem('mhc_access_token')) {
+    const token = localStorage.getItem(
+      'mhc_access_token'
+    );
+
+    if (token) {
       try {
-        const response = await api.createPatient(newPatient);
-        setPatients(prev => [response.patient, ...prev.filter((patient) => patient.patient_id !== response.patient.patient_id)]);
-        return response.patient;
+        const response =
+          await api.createPatient(newPatient);
+
+        const savedPatient = response.patient;
+
+        setPatients((previousPatients) => [
+          savedPatient,
+          ...previousPatients.filter(
+            (patient) =>
+              patient.patient_id !==
+              savedPatient.patient_id
+          )
+        ]);
+
+        return savedPatient;
       } catch (error) {
-        if (error.status === 409) throw error;
+        console.error(
+          'Failed to register patient in MongoDB:',
+          error
+        );
+
+        // Do NOT silently pretend the MongoDB save worked.
+        throw error;
       }
     }
 
-    setPatients(prev => [newPatient, ...prev]);
+    /*
+     * Local-only fallback.
+     */
+    setPatients((previousPatients) => [
+      newPatient,
+      ...previousPatients
+    ]);
+
     return newPatient;
   };
 
+  /*
+   * Find a patient already loaded from MongoDB.
+   */
   const getPatientById = (id) => {
-    return patients.find(p => p.patient_id === id);
+    return patients.find(
+      (patient) => patient.patient_id === id
+    );
   };
 
-  const findDuplicatePatient = ({ phone, name, dob }) => {
-    const cleanPhone = phone ? phone.trim().replace(/\D/g, '') : '';
-    const cleanName = name ? name.trim().toLowerCase() : '';
+  /*
+   * Search for duplicate patients.
+   */
+  const findDuplicatePatient = ({
+    phone,
+    name,
+    dob
+  }) => {
+    const cleanPhone = phone
+      ? phone.trim().replace(/\D/g, '')
+      : '';
 
-    return patients.find(p => {
-      const pPhone = p.phone ? p.phone.trim().replace(/\D/g, '') : '';
-      const pName = p.name ? p.name.trim().toLowerCase() : '';
+    const cleanName = name
+      ? name.trim().toLowerCase()
+      : '';
 
-      // Match 1: Same 10-digit mobile number
-      if (cleanPhone && cleanPhone.length === 10 && pPhone.endsWith(cleanPhone)) {
+    return patients.find((patient) => {
+      const patientPhone = patient.phone
+        ? patient.phone.trim().replace(/\D/g, '')
+        : '';
+
+      const patientName = patient.name
+        ? patient.name.trim().toLowerCase()
+        : '';
+
+      /*
+       * Match 1:
+       * Same 10-digit mobile number.
+       */
+      if (
+        cleanPhone &&
+        cleanPhone.length === 10 &&
+        patientPhone.endsWith(cleanPhone)
+      ) {
         return true;
       }
 
-      // Match 2: Same Name and Date of Birth
-      if (cleanName && pName === cleanName && dob && p.dob === dob) {
+      /*
+       * Match 2:
+       * Same name + date of birth.
+       */
+      if (
+        cleanName &&
+        patientName === cleanName &&
+        dob &&
+        patient.dob === dob
+      ) {
         return true;
       }
 
@@ -89,14 +288,24 @@ export const PatientProvider = ({ children }) => {
     });
   };
 
+  /*
+   * Allows other pages to manually refresh
+   * the central MongoDB patient list.
+   */
+  const refreshPatients = async () => {
+    await loadPatients();
+  };
+
   return (
     <PatientContext.Provider
       value={{
         patients,
+        loading,
         addPatient,
         getPatientById,
         generatePatientId,
-        findDuplicatePatient
+        findDuplicatePatient,
+        refreshPatients
       }}
     >
       {children}
@@ -104,4 +313,5 @@ export const PatientProvider = ({ children }) => {
   );
 };
 
-export const usePatients = () => useContext(PatientContext);
+export const usePatients = () =>
+  useContext(PatientContext);
