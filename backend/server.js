@@ -123,19 +123,31 @@ app.post('/api/auth/login', async (req, res) => {
   const searchStr = String(username || '').trim();
   const escapedStr = searchStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-  const query = {};
-  if (role) query.role = role;
+  let user = null;
+  if (role) {
+    user = await User.findOne({
+      role,
+      $or: [
+        { user_id: searchStr },
+        { phone: searchStr },
+        { email: searchStr.toLowerCase() },
+        { employee_id: searchStr },
+        { name: new RegExp(`^${escapedStr}$`, 'i') }
+      ]
+    }).lean();
+  }
 
-  const user = await User.findOne({
-    ...query,
-    $or: [
-      { user_id: searchStr },
-      { phone: searchStr },
-      { email: searchStr.toLowerCase() },
-      { employee_id: searchStr },
-      { name: new RegExp(`^${escapedStr}$`, 'i') }
-    ]
-  }).lean();
+  if (!user) {
+    user = await User.findOne({
+      $or: [
+        { user_id: searchStr },
+        { phone: searchStr },
+        { email: searchStr.toLowerCase() },
+        { employee_id: searchStr },
+        { name: new RegExp(`^${escapedStr}$`, 'i') }
+      ]
+    }).lean();
+  }
 
   if (!user || !(await bcrypt.compare(password || '', user.passwordHash))) {
     await audit(null, 'LOGIN', 'DENIED', null, 'Invalid credentials');
