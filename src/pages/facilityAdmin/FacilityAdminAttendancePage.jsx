@@ -1,52 +1,101 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { StatusBadge } from '../../components/common/StatusBadge';
-import {
-  UserCheck,
-  Clock,
-  CheckCircle2,
-  Users,
-  UserX
-} from 'lucide-react';
+import { api } from '../../services/api';
+import { UserCheck, Clock, CheckCircle2, Users, UserX, LogIn, LogOut } from 'lucide-react';
 
 export const FacilityAdminAttendancePage = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
 
-  const initialStaff = [
-    { id: 1, name: 'Sunita Laxman Shinde', role: 'Senior Health Worker / ANM', check_in: '08:15 AM', check_out: '—', status: 'PRESENT' },
-    { id: 2, name: 'Dr. Aniket Deshmukh', role: 'Cardiologist (OPD Head)', check_in: '09:00 AM', check_out: '—', status: 'PRESENT' },
-    { id: 3, name: 'Rajesh S. Pawar', role: 'Chief Facility Admin', check_in: '08:30 AM', check_out: '—', status: 'PRESENT' },
-    { id: 4, name: 'Dr. Priyamvada Joshi', role: 'Obstetrics & Gynecology', check_in: '—', check_out: '—', status: 'ON LEAVE' },
-    { id: 5, name: 'Mahesh K. Patil', role: 'Senior Lab Technician', check_in: '09:45 AM', check_out: '—', status: 'LATE' },
-    { id: 6, name: 'Kavita Waghmare', role: 'Staff Nurse (ICU)', check_in: '—', check_out: '—', status: 'ABSENT' }
-  ];
-
-  const [staff, setStaff] = useState(() => {
-    const saved = localStorage.getItem('mhc_attendance');
-    if (saved) return JSON.parse(saved);
-    return initialStaff;
-  });
-
+  const [staff, setStaff] = useState([]);
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [myAttendance, setMyAttendance] = useState(null);
 
-  const markPresent = (id) => {
-    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const updated = staff.map((person) => {
-      if (person.id === id) {
-        return { ...person, status: 'PRESENT', check_in: now };
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [staffRes, attRes] = await Promise.allSettled([
+        api.staff(user?.facility_id),
+        api.attendance()
+      ]);
+
+      let docList = staffRes.status === 'fulfilled' && Array.isArray(staffRes.value?.staff) ? staffRes.value.staff : [];
+      let attList = attRes.status === 'fulfilled' && Array.isArray(attRes.value?.attendance) ? attRes.value.attendance : [];
+
+      // Include admin in staff list if not present
+      const adminInList = docList.some((d) => d.user_id === user?.user_id);
+      if (!adminInList && user) {
+        docList = [
+          {
+            user_id: user.user_id,
+            name: user.name,
+            role: 'facility_admin',
+            designation: 'Facility Administrator',
+            facility_id: user.facility_id
+          },
+          ...docList
+        ];
       }
-      return person;
-    });
 
-    setStaff(updated);
-    localStorage.setItem('mhc_attendance', JSON.stringify(updated));
-    const target = staff.find((s) => s.id === id);
-    setMessage(`${t('attendanceUpdated')} (${target?.name} - ${now})`);
+      const today = new Date().toISOString().split('T')[0];
+      const todayAtt = attList.filter((a) => a.date === today);
+
+      const staffWithAtt = docList.map((person) => {
+        const att = todayAtt.find((a) => a.user_id === person.user_id);
+        return {
+          ...person,
+          check_in: att ? att.check_in : '—',
+          check_out: att ? att.check_out : '—',
+          status: att ? att.status : 'ABSENT',
+          attendance_id: att?.attendance_id
+        };
+      });
+
+      setStaff(staffWithAtt);
+      setAttendanceRecords(attList);
+
+      const mine = todayAtt.find((a) => a.user_id === user?.user_id);
+      setMyAttendance(mine || null);
+    } catch (err) {
+      console.warn('Failed to load attendance data:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const presentCount = staff.filter((s) => s.status === 'PRESENT' || s.status === 'LATE').length;
+  useEffect(() => {
+    if (user?.facility_id) {
+      loadData();
+    }
+  }, [user]);
+
+  const handleSelfCheckIn = async () => {
+    try {
+      await api.checkInAttendance();
+      setMessage('Successfully checked in for today!');
+      setTimeout(() => setMessage(''), 4000);
+      loadData();
+    } catch (err) {
+      alert(err.message || 'Check-in failed');
+    }
+  };
+
+  const handleSelfCheckOut = async () => {
+    try {
+      await api.checkOutAttendance();
+      setMessage('Successfully checked out for today!');
+      setTimeout(() => setMessage(''), 4000);
+      loadData();
+    } catch (err) {
+      alert(err.message || 'Check-out failed');
+    }
+  };
+
+  const presentCount = staff.filter((s) => s.status === 'PRESENT' || s.status === 'COMPLETED' || s.status === 'LATE').length;
   const absentCount = staff.filter((s) => s.status === 'ABSENT').length;
   const leaveCount = staff.filter((s) => s.status === 'ON LEAVE').length;
 
@@ -71,10 +120,23 @@ export const FacilityAdminAttendancePage = () => {
               {t('staffAttendanceTitle')}
             </h1>
             <p style={{ color: '#CBD5E1', margin: 0, fontSize: '0.875rem' }}>
-              {t('facility')}: <strong>{user?.facility_name || 'District Hospital Aundh'}</strong>
+              {t('facility')}: <strong>{user?.facility_name || 'District Hospital'}</strong> ({user?.facility_id || 'FAC-103'})
             </p>
           </div>
-          <StatusBadge status="AVAILABLE" customLabel={t('live_record')} />
+
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            {!myAttendance ? (
+              <button className="gov-btn gov-btn-saffron" onClick={handleSelfCheckIn}>
+                <LogIn size={16} /> Admin Check In
+              </button>
+            ) : myAttendance.status === 'PRESENT' ? (
+              <button className="gov-btn gov-btn-secondary" onClick={handleSelfCheckOut}>
+                <LogOut size={16} /> Admin Check Out ({myAttendance.check_in})
+              </button>
+            ) : (
+              <StatusBadge status="COMPLETED" customLabel={`Checked Out (${myAttendance.check_out})`} />
+            )}
+          </div>
         </div>
       </div>
 
@@ -125,7 +187,7 @@ export const FacilityAdminAttendancePage = () => {
         <div className="gov-card-header">
           <div className="gov-card-title">
             <UserCheck size={18} />
-            <span>{t('todaysAttendanceRoster')}</span>
+            <span>{t('todaysAttendanceRoster')} ({user?.facility_id})</span>
           </div>
         </div>
 
@@ -138,27 +200,24 @@ export const FacilityAdminAttendancePage = () => {
                 <th>{t('checkIn')}</th>
                 <th>{t('checkoutLabel') || 'Check-out'}</th>
                 <th>{t('status')}</th>
-                <th>{t('actionsHeader')}</th>
               </tr>
             </thead>
             <tbody>
               {staff.map((person) => (
-                <tr key={person.id}>
-                  <td><strong>{person.name}</strong></td>
-                  <td style={{ color: '#475569' }}>{person.role}</td>
+                <tr key={person.user_id}>
+                  <td>
+                    <strong>{person.name}</strong> {person.user_id === user?.user_id ? '(You)' : ''}
+                  </td>
+                  <td style={{ color: '#475569' }}>{person.designation || person.role || person.specialty || 'Staff'}</td>
                   <td>{person.check_in}</td>
                   <td>{person.check_out}</td>
-                  <td><StatusBadge status={person.status} /></td>
                   <td>
-                    {person.status !== 'PRESENT' ? (
-                      <button
-                        className="gov-btn gov-btn-primary gov-btn-sm"
-                        onClick={() => markPresent(person.id)}
-                      >
-                        <UserCheck size={14} /> {t('markPresentBtn')}
-                      </button>
+                    {person.status === 'PRESENT' ? (
+                      <StatusBadge status="PRESENT" customLabel={`✓ Checked In (${person.check_in})`} />
+                    ) : person.status === 'COMPLETED' ? (
+                      <StatusBadge status="COMPLETED" customLabel={`✓ Checked Out (${person.check_out})`} />
                     ) : (
-                      <span style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 700 }}>✓ {t('verifiedCheck')}</span>
+                      <StatusBadge status="ABSENT" customLabel="Not Checked In" />
                     )}
                   </td>
                 </tr>

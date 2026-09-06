@@ -86,7 +86,7 @@ export const PatientSearch = () => {
       userRole: user?.role === 'health_worker' ? 'Health Worker' : user?.role === 'doctor' ? 'Doctor' : user?.role === 'facility_admin' ? 'Facility Admin' : 'District Authority',
       patientId: patient.patient_id,
       action: evaluation.allowed ? `Opened Authorized Record (${evaluation.code})` : `Attempted Record Access (${evaluation.code})`,
-      facility: user?.facility_name || 'PHC Mulshi',
+      facility: user?.facility_name || 'Primary Health Centre',
       result: evaluation.allowed ? 'AUTHORIZED' : 'DENIED',
       reason: evaluation.reason
     });
@@ -103,7 +103,7 @@ export const PatientSearch = () => {
       userRole: user?.role === 'health_worker' ? 'Health Worker' : 'Staff',
       patientId: selectedPatient?.patient_id,
       action: 'GRANTED EMERGENCY BREAK-GLASS ACCESS',
-      facility: user?.facility_name || 'PHC Mulshi',
+      facility: user?.facility_name || 'Primary Health Centre',
       result: 'AUTHORIZED',
       reason: `Emergency Break-Glass: ${t(emergencyReason)}`
     });
@@ -246,7 +246,7 @@ export const PatientSearch = () => {
                         <div style={{ fontSize: '0.75rem', color: '#64748B' }}>{patient.district || 'Pune'}</div>
                       </td>
                       <td style={{ fontSize: '0.8125rem', color: '#475569' }}>
-                        {patient.registered_facility_name || 'PHC Mulshi'}
+                        {patient.registered_facility_name || user?.facility_name || 'Primary Health Centre'}
                       </td>
                       <td>
                         <button
@@ -410,7 +410,7 @@ export const PatientSearch = () => {
                       <div><strong>{t('villageSubLocality')}:</strong> {selectedPatient.village}</div>
                       <div><strong>{t('taluka')}:</strong> {selectedPatient.taluka || 'Mulshi'}</div>
                       <div><strong>{t('districtLabel')}:</strong> {selectedPatient.district || 'Pune'}</div>
-                      <div><strong>{t('registeringFacility')}:</strong> {selectedPatient.registered_facility_name || 'PHC Mulshi'}</div>
+                      <div><strong>{t('registeringFacility')}:</strong> {selectedPatient.registered_facility_name || user?.facility_name || 'Primary Health Centre'}</div>
                       <div><strong>{t('registrationTimestamp')}:</strong> {selectedPatient.registered_at || 'Active Record'}</div>
                     </div>
                   </div>

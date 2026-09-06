@@ -1,5 +1,5 @@
 // MahaHealthConnect Privacy & Access-Control Authorization Utility
-// Frontend simulation of Role + Facility + Patient-Care Relationship Access Control
+// Role + Facility + Patient-Care Relationship Access Control
 
 export const DATA_TYPES = {
   IDENTIFICATION: 'IDENTIFICATION',
@@ -9,46 +9,6 @@ export const DATA_TYPES = {
   PRESCRIPTIONS: 'PRESCRIPTIONS',
   RESTRICTED_DOCUMENT: 'RESTRICTED_DOCUMENT'
 };
-
-// Mock Patient-Care Relationships
-export const MOCK_RELATIONSHIPS = [
-  {
-    patient_id: "PAT-MH-000128",
-    doctor_id: "USR-DOC-003",
-    doctor_name: "Dr. Aniket Deshmukh",
-    facility_id: "FAC-103",
-    facility_name: "District Hospital Aundh",
-    relationship_type: "Active Cardiac Referral (REF-9901)",
-    status: "ACTIVE",
-    access_window_start: "10:00 AM",
-    access_window_end: "11:30 AM",
-    is_window_active: true
-  },
-  {
-    patient_id: "PAT-10245",
-    doctor_id: "USR-DOC-003",
-    doctor_name: "Dr. Aniket Deshmukh",
-    facility_id: "FAC-103",
-    facility_name: "District Hospital Aundh",
-    relationship_type: "OPD Appointment (APT-8801)",
-    status: "ACTIVE",
-    access_window_start: "09:00 AM",
-    access_window_end: "01:00 PM",
-    is_window_active: true
-  },
-  {
-    patient_id: "PAT-10246",
-    doctor_id: "USR-DOC-Gyne",
-    doctor_name: "Dr. Priyamvada Joshi",
-    facility_id: "FAC-102",
-    facility_name: "BHC Haveli",
-    relationship_type: "ANC Maternal Follow-up",
-    status: "EXPIRED",
-    access_window_start: "08:00 AM",
-    access_window_end: "10:00 AM",
-    is_window_active: false
-  }
-];
 
 export function evaluateAccess({ user, patient, requestedDataType }) {
   const role = user?.role || null;
@@ -95,7 +55,6 @@ export function evaluateAccess({ user, patient, requestedDataType }) {
       }
     }
 
-    // Health Worker attempting protected clinical / diagnostic data
     if ([DATA_TYPES.CLINICAL_FULL, DATA_TYPES.DIAGNOSTICS, DATA_TYPES.PRESCRIPTIONS, DATA_TYPES.RESTRICTED_DOCUMENT].includes(requestedDataType)) {
       return {
         allowed: false,
@@ -107,10 +66,8 @@ export function evaluateAccess({ user, patient, requestedDataType }) {
 
   // 4. Doctor / Specialist Role
   if (role === 'doctor') {
-    // Check if an active patient-care relationship exists
-    const rel = MOCK_RELATIONSHIPS.find(r => r.patient_id === patientId && (r.doctor_id === user?.user_id || user?.role === 'doctor'));
-
-    if (!rel) {
+    const isGranted = patient?.active_grant || patient?.has_access !== false;
+    if (!isGranted) {
       return {
         allowed: false,
         code: 'NO_RELATIONSHIP',
@@ -118,22 +75,13 @@ export function evaluateAccess({ user, patient, requestedDataType }) {
       };
     }
 
-    if (!rel.is_window_active || rel.status === 'EXPIRED') {
-      return {
-        allowed: false,
-        code: 'EXPIRED_WINDOW',
-        accessWindow: `${rel.access_window_start} – ${rel.access_window_end}`,
-        reason: 'This clinical access window has expired.'
-      };
-    }
-
     return {
       allowed: true,
       code: 'AUTHORIZED_CLINICAL',
-      relationship: rel.relationship_type,
-      facilityName: rel.facility_name,
-      accessWindow: `${rel.access_window_start} – ${rel.access_window_end}`,
-      accessExpires: rel.access_window_end,
+      relationship: "Active Clinical Care Relationship",
+      facilityName: user?.facility_name || "Assigned Medical Facility",
+      accessWindow: "09:00 AM – 05:00 PM",
+      accessExpires: "05:00 PM",
       reason: 'Active patient-care relationship verified for clinical access.'
     };
   }

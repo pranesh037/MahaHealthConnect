@@ -3,7 +3,6 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { usePatients } from '../../context/PatientContext';
 import { StatusBadge } from '../../components/common/StatusBadge';
-import { MOCK_MATERNAL_PROFILES } from '../../mockData';
 import {
   Baby,
   Calendar,
@@ -18,24 +17,7 @@ export const HealthWorkerMaternalPage = () => {
   const { t } = useLanguage();
   const { patients } = usePatients();
 
-  const [maternalList, setMaternalList] = useState(() => [
-    ...MOCK_MATERNAL_PROFILES,
-    {
-      patient_id: 'PAT-10248',
-      name: 'Priyanka Vijay Pawar',
-      age: 24,
-      lmp_date: '2026-04-01',
-      edd_date: '2026-01-06',
-      gestational_age_weeks: 20,
-      trimester: 2,
-      risk_category: 'HIGH',
-      high_risk_factors: ['Borderline Anemia (Hb 9.2 g/dL)'],
-      anc_visits_completed: 1,
-      anc_visits_required: 4,
-      next_due_visit: '2026-09-05',
-      assigned_asha: 'Sunita Shinde (PHC Mulshi)'
-    }
-  ]);
+  const [maternalList, setMaternalList] = useState(() => patients.filter((p) => p.is_maternal));
 
   const [form, setForm] = useState({
     patient_id: patients[1]?.patient_id || 'PAT-10246',

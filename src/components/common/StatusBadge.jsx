@@ -30,6 +30,7 @@ export const StatusBadge = ({ status, customLabel }) => {
           label: customLabel || translateStatus(normalized)
         };
       case 'LOW':
+      case 'LOW_STOCK':
       case 'PENDING':
       case 'NEEDS_RESPONSE':
       case 'PENDING_SYNC':
@@ -39,6 +40,7 @@ export const StatusBadge = ({ status, customLabel }) => {
           label: customLabel || (normalized === 'PENDING_SYNC' ? t('pending_sync') : translateStatus(normalized))
         };
       case 'CRITICAL':
+      case 'OUT_OF_STOCK':
       case 'OVERDUE':
       case 'REJECTED':
       case 'CRITICAL_CAPACITY':

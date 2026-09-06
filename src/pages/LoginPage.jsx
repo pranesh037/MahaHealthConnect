@@ -11,12 +11,13 @@ import {
   Eye,
   EyeOff,
   Activity,
-  Mail
+  Mail,
+  Globe
 } from 'lucide-react';
 
 export const LoginPage = () => {
   const { loginAsUser, registerUser } = useAuth();
-  const { t } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('login'); // 'login' | 'register'
@@ -41,23 +42,16 @@ export const LoginPage = () => {
   const [isRegSubmitting, setIsRegSubmitting] = useState(false);
 
   // Role-Specific Registration State
-  // Patient
   const [regDob, setRegDob] = useState('1995-06-15');
   const [regGender, setRegGender] = useState('Male');
   const [regAddress, setRegAddress] = useState('');
   const [regVillage, setRegVillage] = useState('Mulshi');
   const [regDistrict, setRegDistrict] = useState('Pune');
   const [regBloodGroup, setRegBloodGroup] = useState('B+');
-
-  // Health Worker
   const [regEmpId, setRegEmpId] = useState('');
   const [regWorkerType, setRegWorkerType] = useState('ASHA Worker');
-
-  // Doctor
   const [regLicenseNo, setRegLicenseNo] = useState('');
   const [regSpecialty, setRegSpecialty] = useState('General Medicine');
-
-  // Facilities / District
   const [regFacilityName, setRegFacilityName] = useState('PHC Mulshi');
 
   const navigateToRoleDashboard = (roleKey) => {
@@ -165,10 +159,10 @@ export const LoginPage = () => {
           महा
         </div>
         <h1 style={{ fontSize: '1.875rem', fontWeight: '800', letterSpacing: '-0.02em' }}>
-          महा-हेल्थ-कनेक्ट | MahaHealthConnect
+          {t('app_title')}
         </h1>
         <p style={{ color: '#CBD5E1', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-          Government of Maharashtra Digital Healthcare Coordination Platform
+          {t('gov_dept')}
         </p>
       </div>
 
@@ -184,6 +178,23 @@ export const LoginPage = () => {
           borderTop: '5px solid #D97706'
         }}
       >
+        {/* Global Language Selector Header */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', backgroundColor: '#F8FAFC', padding: '0.375rem 0.75rem', borderRadius: '6px', border: '1px solid #CBD5E1' }}>
+            <Globe size={16} style={{ color: '#D97706' }} />
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              aria-label={t('selectLanguage')}
+              style={{ border: 'none', background: 'transparent', fontWeight: '700', fontSize: '0.875rem', color: '#0F2C59', cursor: 'pointer', outline: 'none' }}
+            >
+              <option value="en">English</option>
+              <option value="mr">मराठी (Marathi)</option>
+              <option value="hi">हिंदी (Hindi)</option>
+            </select>
+          </div>
+        </div>
+
         {/* Navigation Tabs (Sign In / Create Account) */}
         <div
           style={{
@@ -213,7 +224,7 @@ export const LoginPage = () => {
             }}
           >
             <UserCheck size={18} />
-            Sign In
+            {t('signIn')}
           </button>
           <button
             type="button"
@@ -236,7 +247,7 @@ export const LoginPage = () => {
             }}
           >
             <UserPlus size={18} />
-            Create Account
+            {t('createAccount')}
           </button>
         </div>
 
@@ -244,10 +255,10 @@ export const LoginPage = () => {
         {activeTab === 'login' && (
           <div>
             <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#0F2C59', marginBottom: '0.25rem' }}>
-              Sign In to MahaHealthConnect
+              {t('signInPortal')}
             </h2>
             <p style={{ fontSize: '0.8125rem', color: '#64748B', marginBottom: '1.25rem' }}>
-              Enter your registered mobile number, email, or user ID
+              {t('signInSubtitle')}
             </p>
 
             <form onSubmit={handleManualLogin}>
@@ -258,27 +269,27 @@ export const LoginPage = () => {
               )}
 
               <div className="gov-form-group">
-                <label className="gov-label">Stakeholder Role</label>
+                <label className="gov-label">{t('selectStakeholderRole')}</label>
                 <select
                   className="gov-select"
                   value={selectedRole}
                   onChange={(e) => setSelectedRole(e.target.value)}
                 >
-                  <option value="health_worker">Health Worker (ASHA / ANM)</option>
-                  <option value="doctor">Doctor / Specialist</option>
-                  <option value="facility_admin">Facility Administrator</option>
-                  <option value="patient">Citizen / Patient</option>
-                  <option value="district_authority">District Health Officer (DHO)</option>
+                  <option value="health_worker">{t('healthWorkerRole')}</option>
+                  <option value="doctor">{t('doctorSpecialist')}</option>
+                  <option value="facility_admin">{t('facilityAdmin')}</option>
+                  <option value="patient">{t('citizenPatient')}</option>
+                  <option value="district_authority">{t('districtHealthOfficer')}</option>
                 </select>
               </div>
 
               <div className="gov-form-group">
-                <label className="gov-label">User Identifier / Mobile Number / Email</label>
+                <label className="gov-label">{t('userIdentifier')}</label>
                 <div style={{ position: 'relative' }}>
                   <input
                     type="text"
                     className="gov-input"
-                    placeholder="e.g. 9822012345 or USR-WRK-001"
+                    placeholder={t('generic_login_placeholder')}
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     style={{ paddingLeft: '2.5rem' }}
@@ -289,7 +300,7 @@ export const LoginPage = () => {
               </div>
 
               <div className="gov-form-group">
-                <label className="gov-label">Password</label>
+                <label className="gov-label">{t('passwordOtp')}</label>
                 <div style={{ position: 'relative' }}>
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -324,7 +335,7 @@ export const LoginPage = () => {
               </div>
 
               <button type="submit" disabled={isSubmitting} className="gov-btn gov-btn-saffron" style={{ width: '100%', marginTop: '1rem', padding: '0.75rem' }}>
-                {isSubmitting ? 'Signing In...' : 'Sign In'}
+                {isSubmitting ? t('signingIn') : t('signIn')}
               </button>
 
               <div
@@ -340,13 +351,13 @@ export const LoginPage = () => {
                   textAlign: 'center'
                 }}
               >
-                Don't have an account?{' '}
+                {t('dontHaveAccount')}{' '}
                 <button
                   type="button"
                   onClick={() => { setActiveTab('register'); setLoginError(''); setRegError(''); }}
                   style={{ background: 'none', border: 'none', color: '#D97706', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
                 >
-                  Create New Account
+                  {t('createAccountTitle')}
                 </button>
               </div>
             </form>
@@ -357,10 +368,10 @@ export const LoginPage = () => {
         {activeTab === 'register' && (
           <div>
             <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#0F2C59', marginBottom: '0.25rem' }}>
-              Create New Account
+              {t('createAccountTitle')}
             </h2>
             <p style={{ fontSize: '0.8125rem', color: '#64748B', marginBottom: '1.25rem' }}>
-              Role-based user registration connected to MongoDB Atlas
+              {t('rbacNotice')}
             </p>
 
             <form onSubmit={handleRegisterSubmit}>
@@ -372,25 +383,25 @@ export const LoginPage = () => {
 
               {/* Role Selector */}
               <div className="gov-form-group">
-                <label className="gov-label">Select Stakeholder Role *</label>
+                <label className="gov-label">{t('selectStakeholderRole')} *</label>
                 <select
                   className="gov-select"
                   value={regRole}
                   onChange={(e) => setRegRole(e.target.value)}
                   style={{ fontWeight: '600', borderColor: '#D97706' }}
                 >
-                  <option value="patient">Citizen / Patient</option>
-                  <option value="health_worker">Health Worker (ASHA / ANM)</option>
-                  <option value="doctor">Doctor / Specialist</option>
-                  <option value="facility_admin">Facility Administrator</option>
-                  <option value="district_authority">District Health Officer (DHO)</option>
+                  <option value="patient">{t('citizenPatient')}</option>
+                  <option value="health_worker">{t('healthWorkerRole')}</option>
+                  <option value="doctor">{t('doctorSpecialist')}</option>
+                  <option value="facility_admin">{t('facilityAdmin')}</option>
+                  <option value="district_authority">{t('districtHealthOfficer')}</option>
                 </select>
               </div>
 
               {/* Common Fields */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div className="gov-form-group">
-                  <label className="gov-label">Full Name *</label>
+                  <label className="gov-label">{t('name')} *</label>
                   <input
                     type="text"
                     className="gov-input"
@@ -402,7 +413,7 @@ export const LoginPage = () => {
                 </div>
 
                 <div className="gov-form-group">
-                  <label className="gov-label">Mobile Number *</label>
+                  <label className="gov-label">{t('contactPhone')} *</label>
                   <input
                     type="tel"
                     className="gov-input"
@@ -415,7 +426,7 @@ export const LoginPage = () => {
               </div>
 
               <div className="gov-form-group">
-                <label className="gov-label">Email Address (Optional)</label>
+                <label className="gov-label">{t('emailAddress') || 'Email Address'}</label>
                 <input
                   type="email"
                   className="gov-input"
@@ -427,7 +438,7 @@ export const LoginPage = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div className="gov-form-group">
-                  <label className="gov-label">Password *</label>
+                  <label className="gov-label">{t('passwordLabel') || 'Password'} *</label>
                   <div style={{ position: 'relative' }}>
                     <input
                       type={showRegPassword ? 'text' : 'password'}
@@ -441,7 +452,7 @@ export const LoginPage = () => {
                 </div>
 
                 <div className="gov-form-group">
-                  <label className="gov-label">Confirm Password *</label>
+                  <label className="gov-label">{t('confirmPassword') || 'Confirm Password'} *</label>
                   <div style={{ position: 'relative' }}>
                     <input
                       type={showRegPassword ? 'text' : 'password'}
@@ -470,7 +481,7 @@ export const LoginPage = () => {
               <div style={{ backgroundColor: '#F8FAFC', padding: '0.875rem', borderRadius: '8px', border: '1px solid #E2E8F0', marginBottom: '1.25rem' }}>
                 <div style={{ fontWeight: '700', fontSize: '0.8125rem', color: '#0F2C59', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                   <Activity size={14} style={{ color: '#D97706' }} />
-                  {regRole.toUpperCase().replace('_', ' ')} REGISTRATION DETAILS
+                  {t('profile')}
                 </div>
 
                 {regRole === 'patient' && (
@@ -491,15 +502,15 @@ export const LoginPage = () => {
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
                       <div>
-                        <label className="gov-label" style={{ fontSize: '0.75rem' }}>Village</label>
+                        <label className="gov-label" style={{ fontSize: '0.75rem' }}>{t('village')}</label>
                         <input type="text" className="gov-input" value={regVillage} onChange={(e) => setRegVillage(e.target.value)} />
                       </div>
                       <div>
-                        <label className="gov-label" style={{ fontSize: '0.75rem' }}>District</label>
+                        <label className="gov-label" style={{ fontSize: '0.75rem' }}>{t('district')}</label>
                         <input type="text" className="gov-input" value={regDistrict} onChange={(e) => setRegDistrict(e.target.value)} />
                       </div>
                       <div>
-                        <label className="gov-label" style={{ fontSize: '0.75rem' }}>Blood Group</label>
+                        <label className="gov-label" style={{ fontSize: '0.75rem' }}>{t('bloodGroup') || 'Blood Group'}</label>
                         <select className="gov-select" value={regBloodGroup} onChange={(e) => setRegBloodGroup(e.target.value)}>
                           <option value="A+">A+</option>
                           <option value="B+">B+</option>
@@ -526,8 +537,8 @@ export const LoginPage = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="gov-label" style={{ fontSize: '0.75rem' }}>Assigned Facility</label>
-                      <input type="text" className="gov-input" placeholder="e.g. PHC Mulshi" value={regFacilityName} onChange={(e) => setRegFacilityName(e.target.value)} />
+                      <label className="gov-label" style={{ fontSize: '0.75rem' }}>{t('facility')}</label>
+                      <input type="text" className="gov-input" placeholder="e.g. Primary Health Centre" value={regFacilityName} onChange={(e) => setRegFacilityName(e.target.value)} />
                     </div>
                   </div>
                 )}
@@ -535,7 +546,7 @@ export const LoginPage = () => {
                 {regRole === 'doctor' && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                     <div>
-                      <label className="gov-label" style={{ fontSize: '0.75rem' }}>Medical Specialty</label>
+                      <label className="gov-label" style={{ fontSize: '0.75rem' }}>{t('specialty')}</label>
                       <select className="gov-select" value={regSpecialty} onChange={(e) => setRegSpecialty(e.target.value)}>
                         <option value="General Medicine">General Medicine</option>
                         <option value="Cardiology">Cardiology</option>
@@ -545,7 +556,7 @@ export const LoginPage = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="gov-label" style={{ fontSize: '0.75rem' }}>Hospital Facility</label>
+                      <label className="gov-label" style={{ fontSize: '0.75rem' }}>{t('facility')}</label>
                       <input type="text" className="gov-input" placeholder="e.g. District Hospital Aundh" value={regFacilityName} onChange={(e) => setRegFacilityName(e.target.value)} />
                     </div>
                   </div>
@@ -558,15 +569,15 @@ export const LoginPage = () => {
                       <input type="text" className="gov-input" placeholder="e.g. EMP-99882" value={regEmpId} onChange={(e) => setRegEmpId(e.target.value)} />
                     </div>
                     <div>
-                      <label className="gov-label" style={{ fontSize: '0.75rem' }}>{regRole === 'facility_admin' ? 'Facility Name' : 'District'}</label>
-                      <input type="text" className="gov-input" placeholder={regRole === 'facility_admin' ? 'e.g. PHC Mulshi' : 'e.g. Pune'} value={regFacilityName} onChange={(e) => setRegFacilityName(e.target.value)} />
+                      <label className="gov-label" style={{ fontSize: '0.75rem' }}>{regRole === 'facility_admin' ? t('facility') : t('district')}</label>
+                      <input type="text" className="gov-input" placeholder={regRole === 'facility_admin' ? 'e.g. Primary Health Centre' : 'e.g. Pune'} value={regFacilityName} onChange={(e) => setRegFacilityName(e.target.value)} />
                     </div>
                   </div>
                 )}
               </div>
 
               <button type="submit" disabled={isRegSubmitting} className="gov-btn gov-btn-saffron" style={{ width: '100%', padding: '0.75rem' }}>
-                {isRegSubmitting ? 'Registering Account...' : 'Complete Registration & Sign In'}
+                {isRegSubmitting ? t('registering') : t('createAccount')}
               </button>
 
               <div
@@ -581,13 +592,13 @@ export const LoginPage = () => {
                   textAlign: 'center'
                 }}
               >
-                Already have an account?{' '}
+                {t('alreadyHaveAccount')}{' '}
                 <button
                   type="button"
                   onClick={() => { setActiveTab('login'); setLoginError(''); setRegError(''); }}
                   style={{ background: 'none', border: 'none', color: '#D97706', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}
                 >
-                  Sign In
+                  {t('signIn')}
                 </button>
               </div>
             </form>

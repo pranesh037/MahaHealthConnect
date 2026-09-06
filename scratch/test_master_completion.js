@@ -340,9 +340,82 @@ async function runMasterTests() {
   const auditData = await auditRes.json();
   assert(auditRes.status === 200 && Array.isArray(auditData.logs) && auditData.logs.length > 0, 'TEST P: Audit Log Retrieval (GET /api/audit)', `logsCount=${auditData?.logs?.length}`);
 
+  // ------------------------------------------------------------
+
+  // TEST Q-U: Teleconsultation, Attendance, Notifications, Escalations, Health Record
+  // ------------------------------------------------------------
+  console.log('\n--- PART 7: Extended Workflows & Interoperability ---');
+
+  // Q: Teleconsultation Request & Status Update
+  const teleRes = await fetch(`${API_BASE}/teleconsultations`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${roleTokens.health_worker}`
+    },
+    body: JSON.stringify({
+      patient_id: 'PAT-10245',
+      doctor_id: 'USR-DOC-003',
+      reason: 'Urgent Remote Consultation'
+    })
+  });
+  const teleData = await teleRes.json();
+  assert(teleRes.status === 201 && teleData.teleconsultation.teleconsultation_id, 'TEST Q1: Create Teleconsultation Request', `tele_id=${teleData?.teleconsultation?.teleconsultation_id}`);
+
+  const teleApprove = await fetch(`${API_BASE}/teleconsultations/${teleData.teleconsultation.teleconsultation_id}/status`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${roleTokens.doctor}`
+    },
+    body: JSON.stringify({ status: 'APPROVED' })
+  });
+  const teleApproveData = await teleApprove.json();
+  assert(teleApprove.status === 200 && teleApproveData.teleconsultation.status === 'APPROVED', 'TEST Q2: Doctor Approve Teleconsultation', `status=${teleApproveData?.teleconsultation?.status}`);
+
+  // R: Attendance Check-in
+  const attRes = await fetch(`${API_BASE}/attendance/check-in`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${roleTokens.doctor}` }
+  });
+  const attData = await attRes.json();
+  assert(attRes.status === 201 || attRes.status === 400, 'TEST R: Doctor Attendance Check-in', `status=${attRes.status}`);
+
+  // S: Notifications
+  const notifRes = await fetch(`${API_BASE}/notifications`, {
+    headers: { Authorization: `Bearer ${roleTokens.doctor}` }
+  });
+  const notifData = await notifRes.json();
+  assert(notifRes.status === 200 && Array.isArray(notifData.notifications), 'TEST S: Targeted Notifications Retrieval', `count=${notifData?.notifications?.length}`);
+
+  // T: Emergency Escalation
+  const emgRes = await fetch(`${API_BASE}/emergency/escalate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${roleTokens.health_worker}`
+    },
+    body: JSON.stringify({
+      patient_id: 'PAT-10245',
+      target_facility_id: 'FAC-103',
+      target_doctor_id: 'USR-DOC-003',
+      reason: 'Acute Severe Respiratory Distress'
+    })
+  });
+  const emgData = await emgRes.json();
+  assert(emgRes.status === 201 && emgData.escalation.escalation_id, 'TEST T: Emergency Escalation Trigger', `escalation_id=${emgData?.escalation?.escalation_id}`);
+
+  // U: Standardized Health Record API (FHIR Bundle)
+  const hrRes = await fetch(`${API_BASE}/patients/PAT-10245/health-record`, {
+    headers: { Authorization: `Bearer ${roleTokens.doctor}` }
+  });
+  const hrData = await hrRes.json();
+  assert(hrRes.status === 200 && hrData.healthRecord && hrData.healthRecord.resourceType === 'Bundle', 'TEST U: Standardized Patient Health Record (FHIR Bundle)', `resourceType=${hrData?.healthRecord?.resourceType}`);
+
   console.log('\n============================================================');
   console.log(` FINAL SCORE: ${passedCount} / ${totalCount} TESTS PASSED`);
   console.log('============================================================');
 }
 
 runMasterTests().catch(err => console.error('Master test execution error:', err));
+

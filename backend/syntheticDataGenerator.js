@@ -146,7 +146,7 @@ export function generateFacilities(count = 50) {
         else if (number === 105) name = 'Sassoon General Hospital';
         else name = `${type} ${pick(TALUKAS, i)} ${i + 1}`;
 
-        const district = pick(DISTRICTS, i);
+        const district = i < 20 ? 'Pune' : pick(DISTRICTS, i);
         const specialties = [
             pick(SPECIALTIES, i),
             pick(SPECIALTIES, i + 3),
@@ -175,7 +175,11 @@ export function generateFacilities(count = 50) {
             address: `${pick(VILLAGES, i)}, ${district}`,
             contact: `020-${4000000 + i}`,
             doctor_count: 2 + (i % 15),
-            active_beds: Math.max(totalBeds - occupied, 1),
+            active_beds: totalBeds,
+            occupied_beds: occupied,
+            available_beds: Math.max(totalBeds - occupied, 0),
+            icu_beds: type === 'PHC' ? 0 : Math.max(Math.floor(totalBeds * 0.1), 2),
+            available_icu_beds: type === 'PHC' ? 0 : Math.max(Math.floor(totalBeds * 0.05), 1),
             distance_km: `${(2 + ((i * 3.7) % 48)).toFixed(1)} km`,
             last_verified: dateAgo(i % 15),
             status: i % 13 === 0 ? 'LIMITED' : 'AVAILABLE',

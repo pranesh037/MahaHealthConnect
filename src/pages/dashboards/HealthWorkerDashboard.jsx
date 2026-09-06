@@ -12,7 +12,9 @@ import {
   Clock,
   Wifi,
   PlusCircle,
-  Building2
+  Building2,
+  LogIn,
+  LogOut
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -24,19 +26,27 @@ export const HealthWorkerDashboard = () => {
 
   const [referrals, setReferrals] = useState([]);
   const [triages, setTriages] = useState([]);
+  const [myAttendance, setMyAttendance] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
     const fetchWorkerData = async () => {
       try {
-        const [refsRes, trgRes] = await Promise.allSettled([
+        const [refsRes, trgRes, attRes] = await Promise.allSettled([
           api.referrals(),
-          api.triages()
+          api.triages(),
+          api.attendance()
         ]);
         if (!isMounted) return;
         setReferrals(refsRes.status === 'fulfilled' && Array.isArray(refsRes.value?.referrals) ? refsRes.value.referrals : []);
         setTriages(trgRes.status === 'fulfilled' && Array.isArray(trgRes.value?.triages) ? trgRes.value.triages : []);
+
+        if (attRes.status === 'fulfilled' && Array.isArray(attRes.value?.attendance)) {
+          const today = new Date().toISOString().split('T')[0];
+          const mine = attRes.value.attendance.find((a) => a.user_id === user?.user_id && a.date === today);
+          setMyAttendance(mine || null);
+        }
       } catch (err) {
         console.warn('Failed to load health worker dashboard data:', err);
       } finally {
@@ -46,6 +56,24 @@ export const HealthWorkerDashboard = () => {
     fetchWorkerData();
     return () => { isMounted = false; };
   }, [user]);
+
+  const handleCheckIn = async () => {
+    try {
+      const res = await api.checkInAttendance();
+      if (res?.attendance) setMyAttendance(res.attendance);
+    } catch (err) {
+      alert(err.message || 'Check-in failed');
+    }
+  };
+
+  const handleCheckOut = async () => {
+    try {
+      const res = await api.checkOutAttendance();
+      if (res?.attendance) setMyAttendance(res.attendance);
+    } catch (err) {
+      alert(err.message || 'Check-out failed');
+    }
+  };
 
   return (
     <div>
@@ -72,7 +100,19 @@ export const HealthWorkerDashboard = () => {
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            {!myAttendance ? (
+              <button className="gov-btn gov-btn-saffron" onClick={handleCheckIn}>
+                <LogIn size={16} /> Worker Check In
+              </button>
+            ) : myAttendance.status === 'PRESENT' ? (
+              <button className="gov-btn gov-btn-secondary" onClick={handleCheckOut}>
+                <LogOut size={16} /> Worker Check Out ({myAttendance.check_in})
+              </button>
+            ) : (
+              <StatusBadge status="COMPLETED" customLabel={`Checked Out (${myAttendance.check_out})`} />
+            )}
+
             <Link to="/health-worker/register" className="gov-btn gov-btn-saffron">
               <PlusCircle size={18} />
               <span>{t('registerPatientAction')}</span>
@@ -188,7 +228,7 @@ export const HealthWorkerDashboard = () => {
                 >
                   <div>
                     <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#0F2C59' }}>
-                      {pt.name} ({pt.age || '30'} {t('yearsShort')})
+                      {pt.name} {pt.age !== undefined && pt.age !== null ? `(${pt.age} ${t('yearsShort')})` : ''}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
                       {t('identifier')}: {pt.patient_id} • {t('village')}: {pt.village || 'General'}

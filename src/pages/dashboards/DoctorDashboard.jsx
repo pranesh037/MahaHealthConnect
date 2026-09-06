@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { api } from '../../services/api';
-import { Stethoscope, ClipboardList, ShieldCheck, FileText, AlertOctagon, Calendar } from 'lucide-react';
+import { Stethoscope, ClipboardList, ShieldCheck, FileText, AlertOctagon, Calendar, LogIn, LogOut, UserCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const DoctorDashboard = () => {
@@ -12,19 +12,27 @@ export const DoctorDashboard = () => {
 
   const [appointments, setAppointments] = useState([]);
   const [referrals, setReferrals] = useState([]);
+  const [myAttendance, setMyAttendance] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
     const fetchDoctorData = async () => {
       try {
-        const [aptsRes, refsRes] = await Promise.allSettled([
+        const [aptsRes, refsRes, attRes] = await Promise.allSettled([
           api.appointments(),
-          api.referrals()
+          api.referrals(),
+          api.attendance()
         ]);
         if (!isMounted) return;
         setAppointments(aptsRes.status === 'fulfilled' && Array.isArray(aptsRes.value?.appointments) ? aptsRes.value.appointments : []);
         setReferrals(refsRes.status === 'fulfilled' && Array.isArray(refsRes.value?.referrals) ? refsRes.value.referrals : []);
+
+        if (attRes.status === 'fulfilled' && Array.isArray(attRes.value?.attendance)) {
+          const today = new Date().toISOString().split('T')[0];
+          const mine = attRes.value.attendance.find((a) => a.user_id === user?.user_id && a.date === today);
+          setMyAttendance(mine || null);
+        }
       } catch (err) {
         console.warn('Failed to load doctor dashboard data:', err);
       } finally {
@@ -34,6 +42,24 @@ export const DoctorDashboard = () => {
     fetchDoctorData();
     return () => { isMounted = false; };
   }, [user]);
+
+  const handleCheckIn = async () => {
+    try {
+      const res = await api.checkInAttendance();
+      if (res?.attendance) setMyAttendance(res.attendance);
+    } catch (err) {
+      alert(err.message || 'Check-in failed');
+    }
+  };
+
+  const handleCheckOut = async () => {
+    try {
+      const res = await api.checkOutAttendance();
+      if (res?.attendance) setMyAttendance(res.attendance);
+    } catch (err) {
+      alert(err.message || 'Check-out failed');
+    }
+  };
 
   const highPriorityCount = referrals.filter(r => r.priority === 'HIGH' || r.priority === 'CRITICAL' || r.priority === 'EMERGENCY').length;
 
@@ -62,21 +88,35 @@ export const DoctorDashboard = () => {
             </p>
           </div>
 
-          <div
-            style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              padding: '0.625rem 1rem',
-              borderRadius: '8px',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              fontSize: '0.8125rem'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700', color: '#86EFAC' }}>
-              <ShieldCheck size={16} />
-              <span>{t('rbacClearance')}</span>
-            </div>
-            <div style={{ color: '#CBD5E1', fontSize: '0.75rem', marginTop: '0.125rem' }}>
-              Doctor Scope: {user?.user_id || 'USR-DOC'}
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            {!myAttendance ? (
+              <button className="gov-btn gov-btn-saffron" onClick={handleCheckIn}>
+                <LogIn size={16} /> Doctor Check In
+              </button>
+            ) : myAttendance.status === 'PRESENT' ? (
+              <button className="gov-btn gov-btn-secondary" onClick={handleCheckOut}>
+                <LogOut size={16} /> Doctor Check Out ({myAttendance.check_in})
+              </button>
+            ) : (
+              <StatusBadge status="COMPLETED" customLabel={`Checked Out (${myAttendance.check_out})`} />
+            )}
+
+            <div
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                padding: '0.625rem 1rem',
+                borderRadius: '8px',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                fontSize: '0.8125rem'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700', color: '#86EFAC' }}>
+                <ShieldCheck size={16} />
+                <span>{t('rbacClearance')}</span>
+              </div>
+              <div style={{ color: '#CBD5E1', fontSize: '0.75rem', marginTop: '0.125rem' }}>
+                Doctor Scope: {user?.user_id || 'USR-DOC'}
+              </div>
             </div>
           </div>
         </div>
@@ -225,7 +265,7 @@ export const DoctorDashboard = () => {
                 <div key={ref.referral_id || ref._id} style={{ padding: '0.75rem', border: '1px solid #FCA5A5', borderRadius: '8px', backgroundColor: '#FEF2F2' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.375rem' }}>
                     <span style={{ fontWeight: '800', color: '#7F1D1D', fontSize: '0.875rem' }}>
-                      {ref.patient_name} ({ref.age || 45} {t('yearsShort')})
+                      {ref.patient_name} {ref.age !== undefined && ref.age !== null ? `(${ref.age} ${t('yearsShort')})` : ''}
                     </span>
                     <StatusBadge status={ref.priority || 'NORMAL'} />
                   </div>

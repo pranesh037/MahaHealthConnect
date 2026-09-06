@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { MOCK_PATIENTS } from '../mockData';
 import { api } from '../services/api';
 
 const PatientContext = createContext();
@@ -17,15 +16,10 @@ export const PatientProvider = ({ children }) => {
     if (!token) {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
-
-        if (saved) {
-          setPatients(JSON.parse(saved));
-        } else {
-          setPatients(MOCK_PATIENTS);
-        }
+        setPatients(saved ? JSON.parse(saved) : []);
       } catch (error) {
         console.error('Failed to load local patients:', error);
-        setPatients(MOCK_PATIENTS);
+        setPatients([]);
       }
 
       setLoading(false);
@@ -35,54 +29,29 @@ export const PatientProvider = ({ children }) => {
     // Logged in: MongoDB is the source of truth.
     try {
       setLoading(true);
-
       const response = await api.patients();
-
-      const serverPatients = Array.isArray(response?.patients)
-        ? response.patients
-        : [];
-
+      const serverPatients = Array.isArray(response?.patients) ? response.patients : [];
       setPatients(serverPatients);
 
-      // Keep a local copy for offline/read-only fallback.
       try {
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify(serverPatients)
-        );
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(serverPatients));
       } catch (storageError) {
-        console.error(
-          'Failed to cache patients locally:',
-          storageError
-        );
+        console.error('Failed to cache patients locally:', storageError);
       }
     } catch (error) {
-      console.error(
-        'Failed to load patients from MongoDB:',
-        error
-      );
-
-      // Use cached data only if the API is temporarily unavailable.
+      console.error('Failed to load patients from MongoDB:', error);
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
-
-        if (saved) {
-          setPatients(JSON.parse(saved));
-        } else {
-          setPatients(MOCK_PATIENTS);
-        }
+        setPatients(saved ? JSON.parse(saved) : []);
       } catch (localError) {
-        console.error(
-          'Failed to load cached patients:',
-          localError
-        );
-
-        setPatients(MOCK_PATIENTS);
+        console.error('Failed to load cached patients:', localError);
+        setPatients([]);
       }
     } finally {
       setLoading(false);
     }
   };
+
 
   /*
    * Load MongoDB patients when the provider starts.

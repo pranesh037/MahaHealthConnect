@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { usePatients } from '../../context/PatientContext';
 import { StatusBadge } from '../../components/common/StatusBadge';
-import { MOCK_MATERNAL_PROFILES } from '../../mockData';
+import { api } from '../../services/api';
 import {
   Baby,
   CalendarCheck,
@@ -13,28 +13,50 @@ import {
 } from 'lucide-react';
 
 export const PatientMaternalPage = () => {
+  const { user } = useAuth();
   const { t } = useLanguage();
-  const { patients } = usePatients();
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const maternalPatient = patients.find((p) => p.is_maternal) || MOCK_MATERNAL_PROFILES[0] || {
-    patient_id: 'PAT-10246',
-    name: 'Savita Dnyaneshwar Jadhav',
-    age: 26,
-    lmp_date: '2026-03-12',
-    edd_date: '2026-12-17',
-    gestational_age_weeks: 24,
-    trimester: 2,
-    risk_category: 'NORMAL',
-    high_risk_factors: [],
-    anc_visits_completed: 2,
-    anc_visits_required: 4,
-    last_visit: '2026-08-05',
-    next_due_visit: '2026-09-02',
-    vitals: { bp: '110/70', weight: '54 kg', hemoglobin: '11.8 g/dL', blood_sugar: '92 mg/dL' },
-    assigned_asha: 'Sunita Shinde (PHC Mulshi)'
-  };
+  useEffect(() => {
+    let mounted = true;
+    api.patientDashboard().then((res) => {
+      if (!mounted) return;
+      setDashboardData(res);
+      setLoading(false);
+    }).catch((err) => {
+      console.error('Error loading patient dashboard in maternal page:', err);
+      if (mounted) setLoading(false);
+    });
+    return () => { mounted = false; };
+  }, [user]);
 
-  const timelineSteps = [
+  const maternalData = dashboardData?.maternal;
+  const patient = dashboardData?.patient;
+
+  if (loading) {
+    return (
+      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '2rem', textAlign: 'center' }}>
+        <p style={{ color: '#64748B' }}>{t('loadingMaternalRecords')}</p>
+      </div>
+    );
+  }
+
+  if (!maternalData || !patient?.is_maternal) {
+    return (
+      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+        <div className="gov-card" style={{ padding: '3rem', textAlign: 'center', backgroundColor: '#F8FAFC' }}>
+          <Baby size={48} style={{ color: '#94A3B8', marginBottom: '1rem' }} />
+          <h2 style={{ fontSize: '1.25rem', color: '#334155', fontWeight: 700 }}>{t('noMaternalHistoryRecorded')}</h2>
+          <p style={{ color: '#64748B', marginTop: '0.5rem', fontSize: '0.875rem' }}>
+            {t('noMaternalHistoryDetails')}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const timelineSteps = maternalData.timelineSteps || [
     { title: t('ancRegistration'), status: 'COMPLETED', date: '2026-04-10', note: 'Registered at PHC Mulshi • LMP: 12 Mar 2026' },
     { title: t('visit1'), status: 'COMPLETED', date: '2026-05-15', note: 'Vitals normal • IFA Red tablets issued • TT-1 administered' },
     { title: t('visit2'), status: 'COMPLETED', date: '2026-08-05', note: 'Weight: 54kg, BP: 110/70 • Hb: 11.8 g/dL • Normal fetal heart rate' },
@@ -63,10 +85,10 @@ export const PatientMaternalPage = () => {
               {t('ancTrackerTitle')}
             </h1>
             <p style={{ color: '#CBD5E1', margin: 0, fontSize: '0.875rem' }}>
-              {t('patient')}: <strong>{maternalPatient.name}</strong> ({maternalPatient.patient_id}) • ASHA: {maternalPatient.assigned_asha || 'Sunita Shinde'}
+              {t('patient')}: <strong>{patient.name}</strong> ({patient.patient_id}) • ASHA: {maternalData.assigned_asha || 'Sunita Shinde'}
             </p>
           </div>
-          <StatusBadge status={maternalPatient.risk_category || 'NORMAL'} customLabel={t('normal_risk')} />
+          <StatusBadge status={maternalData.risk_category || 'NORMAL'} />
         </div>
       </div>
 
@@ -74,15 +96,15 @@ export const PatientMaternalPage = () => {
       <div className="grid-stats" style={{ marginBottom: '1.5rem' }}>
         <div className="stat-card">
           <div>
-            <div className="stat-value" style={{ color: '#059669' }}>2nd Trimester</div>
-            <div className="stat-label">{t('currentTrimester')} ({maternalPatient.gestational_age_weeks || 24} Wks)</div>
+            <div className="stat-value" style={{ color: '#059669' }}>{t('secondTrimester')}</div>
+            <div className="stat-label">{t('currentTrimester')} ({maternalData.gestational_age_weeks || 24} Wks)</div>
           </div>
           <Baby style={{ color: '#059669' }} />
         </div>
 
         <div className="stat-card">
           <div>
-            <div className="stat-value" style={{ color: '#1E40AF' }}>{maternalPatient.edd_date || '17 Dec 2026'}</div>
+            <div className="stat-value" style={{ color: '#1E40AF' }}>{maternalData.edd_date || '17 Dec 2026'}</div>
             <div className="stat-label">{t('edd')}</div>
           </div>
           <CalendarCheck style={{ color: '#1E40AF' }} />
@@ -119,19 +141,19 @@ export const PatientMaternalPage = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', fontSize: '0.875rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid #E2E8F0' }}>
               <span style={{ color: '#64748B' }}>{t('bloodPressure')}:</span>
-              <strong>{maternalPatient.vitals?.bp || '110/70 mmHg'}</strong>
+              <strong>{maternalData.vitals?.bp || '110/70 mmHg'}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid #E2E8F0' }}>
               <span style={{ color: '#64748B' }}>{t('maternalWeight')}:</span>
-              <strong>{maternalPatient.vitals?.weight || '54 kg'}</strong>
+              <strong>{maternalData.vitals?.weight || '54 kg'}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid #E2E8F0' }}>
               <span style={{ color: '#64748B' }}>{t('hemoglobinLevel')}:</span>
-              <strong style={{ color: '#059669' }}>{maternalPatient.vitals?.hemoglobin || '11.8 g/dL'}</strong>
+              <strong style={{ color: '#059669' }}>{maternalData.vitals?.hemoglobin || '11.8 g/dL'}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px solid #E2E8F0' }}>
               <span style={{ color: '#64748B' }}>{t('bloodGlucose')}:</span>
-              <strong>{maternalPatient.vitals?.blood_sugar || '92 mg/dL'}</strong>
+              <strong>{maternalData.vitals?.blood_sugar || '92 mg/dL'}</strong>
             </div>
             <div style={{ padding: '0.75rem', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px' }}>
               <div style={{ fontWeight: 700, color: '#065F46', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>

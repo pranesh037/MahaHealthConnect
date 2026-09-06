@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { StatusBadge } from '../../components/common/StatusBadge';
-import { MOCK_FACILITIES } from '../../mockData';
+import { api } from '../../services/api';
 import {
   Activity,
   CheckCircle2,
@@ -14,13 +14,27 @@ export const DistrictDiagnosticCapacityPage = () => {
   const { user } = useAuth();
   const { t, translateDiagnostic } = useLanguage();
 
-  const diagnosticMatrix = [
-    { facility: 'PHC Mulshi', x_ray: 'AVAILABLE', ecg: 'LIMITED', ct: 'UNAVAILABLE', blood_test: 'AVAILABLE', ultrasound: 'UNAVAILABLE' },
-    { facility: 'BHC Haveli', x_ray: 'AVAILABLE', ecg: 'AVAILABLE', ct: 'UNAVAILABLE', blood_test: 'AVAILABLE', ultrasound: 'LIMITED' },
-    { facility: 'District Hospital Aundh', x_ray: 'AVAILABLE', ecg: 'AVAILABLE', ct: 'AVAILABLE', blood_test: 'AVAILABLE', ultrasound: 'AVAILABLE' },
-    { facility: 'Sub-District Hospital Baramati', x_ray: 'AVAILABLE', ecg: 'AVAILABLE', ct: 'LIMITED', blood_test: 'AVAILABLE', ultrasound: 'AVAILABLE' },
-    { facility: 'Sassoon General Hospital', x_ray: 'AVAILABLE', ecg: 'AVAILABLE', ct: 'AVAILABLE', blood_test: 'AVAILABLE', ultrasound: 'AVAILABLE' }
-  ];
+  const [facilities, setFacilities] = React.useState([]);
+
+  React.useEffect(() => {
+    let mounted = true;
+    api.facilities().then((res) => {
+      if (mounted && Array.isArray(res?.facilities)) setFacilities(res.facilities);
+    }).catch(console.error);
+    return () => { mounted = false; };
+  }, []);
+
+  const diagnosticMatrix = facilities.map((fac) => {
+    const diag = fac.diagnostics || {};
+    return {
+      facility: fac.name,
+      x_ray: diag.x_ray || 'AVAILABLE',
+      ecg: diag.ecg || 'AVAILABLE',
+      ct: diag.ct_scan || (fac.type === 'District Hospital' ? 'AVAILABLE' : 'UNAVAILABLE'),
+      blood_test: diag.blood_test || 'AVAILABLE',
+      ultrasound: diag.ultrasound || (fac.type === 'PHC' ? 'UNAVAILABLE' : 'AVAILABLE')
+    };
+  });
 
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto' }}>

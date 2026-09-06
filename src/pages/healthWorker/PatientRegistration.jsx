@@ -41,7 +41,7 @@ export const PatientRegistration = () => {
   const { t, translateGender } = useLanguage();
 
   // Facility defaults from logged-in user context
-  const facilityName = user?.facility_name || 'PHC Mulshi';
+  const facilityName = user?.facility_name || 'Primary Health Centre';
   const facilityDistrict = user?.district || 'Pune';
   const facilityTaluka = user?.taluka || 'Mulshi';
   const facilityId = user?.facility_id || 'FAC-101';
@@ -594,7 +594,7 @@ export const PatientRegistration = () => {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ fontWeight: '700', color: '#64748B' }}>{t('facility')}:</span>
-                  <span>{duplicateWarning.registered_facility_name || 'PHC Mulshi'}</span>
+                  <span>{duplicateWarning.registered_facility_name || user?.facility_name || 'Primary Health Centre'}</span>
                 </div>
               </div>
 
@@ -648,7 +648,7 @@ export const PatientRegistration = () => {
                 <div><strong>{t('mobileNumber')}:</strong> {viewingDuplicatePatient.phone}</div>
                 <div><strong>{t('villageSubLocality')}:</strong> {viewingDuplicatePatient.village}</div>
                 <div><strong>{t('districtLabel')}:</strong> {viewingDuplicatePatient.district || 'Pune'}</div>
-                <div><strong>{t('facility')}:</strong> {viewingDuplicatePatient.registered_facility_name || 'PHC Mulshi'}</div>
+                <div><strong>{t('facility')}:</strong> {viewingDuplicatePatient.registered_facility_name || user?.facility_name || 'Primary Health Centre'}</div>
               </div>
             </div>
 

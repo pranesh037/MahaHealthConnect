@@ -89,7 +89,7 @@ export const AuditProvider = ({ children }) => {
       userRole: userRole || 'Staff',
       patientId: patientId || 'N/A',
       action: action || 'Record Access',
-      facility: facility || 'PHC Mulshi',
+      facility: facility || 'Primary Health Centre',
       result: result || 'AUTHORIZED',
       reason: reason || 'Verified authorization check'
     };

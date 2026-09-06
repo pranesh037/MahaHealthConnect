@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { FacilityAdminAttendancePage } from './FacilityAdminAttendancePage';
+import { FacilityAdminBedsEquipmentPage } from './FacilityAdminBedsEquipmentPage';
 import { CriticalWorkflowPage } from '../CriticalWorkflowPage';
-import { UserCheck, Stethoscope, Pill, Building2, Activity } from 'lucide-react';
+import { UserCheck, Pill, Building2, Activity } from 'lucide-react';
 
 export const FacilityAdminResources = () => {
   const { t } = useLanguage();
@@ -10,7 +11,6 @@ export const FacilityAdminResources = () => {
 
   const tabs = [
     { id: 'attendance', label: t('attendance'), icon: <UserCheck size={18} /> },
-    { id: 'doctors', label: t('doctorAvailability'), icon: <Stethoscope size={18} /> },
     { id: 'medicines', label: t('medicines'), icon: <Pill size={18} /> },
     { id: 'beds', label: t('bedsAndEquipmentTab'), icon: <Building2 size={18} /> },
     { id: 'diagnostics', label: t('diagnosticCapacity'), icon: <Activity size={18} /> }
@@ -60,9 +60,8 @@ export const FacilityAdminResources = () => {
 
       <div>
         {activeTab === 'attendance' && <FacilityAdminAttendancePage />}
-        {activeTab === 'doctors' && <CriticalWorkflowPage overrideKey="doctors" />}
         {activeTab === 'medicines' && <CriticalWorkflowPage overrideKey="medicines" />}
-        {activeTab === 'beds' && <CriticalWorkflowPage overrideKey="facilities" />}
+        {activeTab === 'beds' && <FacilityAdminBedsEquipmentPage />}
         {activeTab === 'diagnostics' && <CriticalWorkflowPage overrideKey="diagnostics" />}
       </div>
     </div>

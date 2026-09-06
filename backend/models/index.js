@@ -14,3 +14,8 @@ export { Bed } from './Bed.js';
 export { AuditLog } from './AuditLog.js';
 export { Consultation } from './Consultation.js';
 export { AccessGrant } from './AccessGrant.js';
+export { Teleconsultation } from './Teleconsultation.js';
+export { Attendance } from './Attendance.js';
+export { Notification } from './Notification.js';
+export { EmergencyEscalation } from './EmergencyEscalation.js';
+

@@ -33,6 +33,8 @@ import { HealthWorkerPatients } from './pages/healthWorker/HealthWorkerPatients'
 import { HealthWorkerTriageCare } from './pages/healthWorker/HealthWorkerTriageCare';
 
 import { DoctorPatientCare } from './pages/doctor/DoctorPatientCare';
+import { TeleconsultationRoom } from './pages/doctor/TeleconsultationRoom';
+
 
 import { FacilityAdminAttendancePage } from './pages/facilityAdmin/FacilityAdminAttendancePage';
 import { FacilityAdminAnalyticsPage } from './pages/facilityAdmin/FacilityAdminAnalyticsPage';
@@ -109,17 +111,16 @@ export function App() {
                     <Route path="/doctor/diagnostics" element={<CriticalWorkflowPage overrideKey="diagnostics" />} />
                     <Route path="/doctor/prescription" element={<CriticalWorkflowPage overrideKey="prescription" />} />
                     <Route path="/doctor/referrals" element={<CriticalWorkflowPage overrideKey="referrals" />} />
-                    <Route
-                      path="/doctor/access"
-                      element={<CriticalWorkflowPage overrideKey="access" />}
-                    />
+                    <Route path="/doctor/access" element={<CriticalWorkflowPage overrideKey="access" />} />
                     <Route path="/doctor/followups" element={<CriticalWorkflowPage overrideKey="followups" />} />
+                    <Route path="/teleconsultation/:id" element={<TeleconsultationRoom />} />
+                    <Route path="/doctor/teleconsultation/:id" element={<TeleconsultationRoom />} />
+
 
                     {/* Facility Administrator Routes */}
                     <Route path="/facility-admin" element={<FacilityAdminDashboard />} />
                     <Route path="/facility-admin/resources" element={<FacilityAdminResources />} />
                     <Route path="/facility-admin/attendance" element={<FacilityAdminAttendancePage />} />
-                    <Route path="/facility-admin/doctors" element={<CriticalWorkflowPage overrideKey="doctors" />} />
                     <Route path="/facility-admin/medicines" element={<CriticalWorkflowPage overrideKey="medicines" />} />
                     <Route path="/facility-admin/diagnostics" element={<CriticalWorkflowPage overrideKey="diagnostics" />} />
                     <Route path="/facility-admin/referrals" element={<CriticalWorkflowPage overrideKey="referrals" />} />

@@ -1,0 +1,2 @@
+MongoDB Atlas connection failed: querySrv ETIMEOUT _mongodb._tcp.cluster0.m9wgd5y.mongodb.net
+Failed to connect to MongoDB. Exiting.

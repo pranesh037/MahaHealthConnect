@@ -25,6 +25,10 @@ const userSchema = new mongoose.Schema({
   specialty: { type: String },
   license_no: { type: String },
   jurisdiction: { type: String },
+  availability_status: { type: String, default: 'AVAILABLE' },
+  available_days: [{ type: String }],
+  availability_schedule: { type: String },
+  last_availability_update: { type: String },
   passwordHash: { type: String, required: true },
   created_at: { type: Date, default: Date.now }
 }, { timestamps: false });
